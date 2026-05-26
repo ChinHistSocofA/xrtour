@@ -64,6 +64,7 @@ router.post('/', interceptors.requireLogin, async (req, res) => {
           )
         );
         await Promise.all(files);
+        record.Files = await record.getFiles({ transaction });
       }
     });
   } catch (error) {
