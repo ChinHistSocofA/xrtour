@@ -290,7 +290,13 @@ function Tour() {
           </>
         )}
         {isShowingResourcesModal && (
-          <ResourcesModal isShowing={true} onHide={onHideResourcesModal} onSelect={onSelectResource} types={['IMAGE']} />
+          <ResourcesModal
+            isShowing={true}
+            onHide={onHideResourcesModal}
+            onSelect={onSelectResource}
+            types={['IMAGE']}
+            variants={tour?.variants}
+          />
         )}
         {isShowingStopsModal && (
           <StopsModal
