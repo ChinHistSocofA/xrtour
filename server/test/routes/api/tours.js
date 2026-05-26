@@ -1,11 +1,17 @@
 import assert from 'assert';
+import AdmZip from 'adm-zip';
+import fs from 'fs';
 import { StatusCodes } from 'http-status-codes';
 import session from 'supertest-session';
 import path from 'path';
+import { fileURLToPath } from 'url';
 
 import helper from '../../helper.js';
 import app from '../../../app.js';
 import models from '../../../models/index.js';
+import s3 from '../../../lib/s3.js';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 describe('/api/tours', () => {
   let testSession;
@@ -446,6 +452,178 @@ describe('/api/tours', () => {
 
       record = await models.Resource.findByPk('6ebacda9-8d33-4c3e-beb5-18dffb119046');
       assert.deepStrictEqual(record.archivedAt, null);
+    });
+  });
+
+  describe('GET /:id/export', () => {
+    it('returns a ZIP containing tour.json and binary asset files', async () => {
+      const response = await testSession
+        .get('/api/tours/495b18a8-ae05-4f44-a06d-c1809add0352/export')
+        .buffer(true)
+        .parse((res, fn) => {
+          const chunks = [];
+          res.on('data', (chunk) => chunks.push(chunk));
+          res.on('end', () => fn(null, Buffer.concat(chunks)));
+          res.on('error', fn);
+        })
+        .expect(StatusCodes.OK)
+        .expect('Content-Type', /application\/zip/);
+
+      const zip = new AdmZip(response.body);
+
+      const tourEntry = zip.getEntry('tour.json');
+      assert.ok(tourEntry);
+      const tourData = JSON.parse(tourEntry.getData().toString('utf8'));
+      assert.deepStrictEqual(tourData.link, 'tour2');
+      assert.deepStrictEqual(tourData.TourStops.length, 2);
+      assert.deepStrictEqual(tourData.TourStops[0].Stop.link, 'chsa');
+      assert.deepStrictEqual(tourData.TourStops[0].Stop.Resources.length, 2);
+      // Raw key values present, no virtual URL fields
+      assert.ok(tourData.TourStops[0].Stop.Resources[0].Resource.Files[0].key);
+      assert.deepStrictEqual(tourData.TourStops[0].Stop.Resources[0].Resource.Files[0].URL, undefined);
+
+      // Binary asset entries present for files with keys
+      const imageEntry = zip.getEntry(
+        'files/ed2f158a-e44e-432d-971e-e5da1a2e33b4/key/cdd8007d-dcaf-4163-b497-92d378679668.png'
+      );
+      assert.ok(imageEntry);
+      assert.ok(imageEntry.getData().length > 0);
+
+      const audioEntry = zip.getEntry(
+        'files/84b62056-05a4-4751-953f-7854ac46bc0f/key/d2e150be-b277-4f68-96c7-22a477e0022f.m4a'
+      );
+      assert.ok(audioEntry);
+      assert.ok(audioEntry.getData().length > 0);
+    });
+  });
+
+  describe('POST /import', () => {
+    const ORIG_FILE_ID = '00000000-0000-0000-0000-000000000001';
+    const ORIG_RESOURCE_ID = '00000000-0000-0000-0000-000000000010';
+    const ORIG_STOP_ID = '00000000-0000-0000-0000-000000000100';
+    const ORIG_TOUR_ID = '00000000-0000-0000-0000-000000001000';
+
+    function buildExportData(link = 'imported-tour') {
+      return {
+        id: ORIG_TOUR_ID,
+        name: 'Imported Tour',
+        link,
+        names: { 'en-us': 'Imported Tour' },
+        descriptions: { 'en-us': 'Imported description' },
+        variants: [{ name: 'English (US)', displayName: 'English', code: 'en-us' }],
+        visibility: 'PRIVATE',
+        TourStops: [
+          {
+            id: '00000000-0000-0000-0000-000000010000',
+            position: 1,
+            StopId: ORIG_STOP_ID,
+            TransitionStopId: null,
+            Stop: {
+              id: ORIG_STOP_ID,
+              type: 'STOP',
+              link: 'imported-stop',
+              name: 'Imported Stop',
+              address: '965 Clay St, San Francisco, CA 94108',
+              coordinate: null,
+              radius: null,
+              destAddress: null,
+              destCoordinate: null,
+              destRadius: null,
+              names: { 'en-us': 'Imported Stop' },
+              descriptions: { 'en-us': 'Imported stop description' },
+              variants: [{ name: 'English (US)', displayName: 'English', code: 'en-us' }],
+              Resources: [
+                {
+                  id: '00000000-0000-0000-0000-000000100000',
+                  StopId: ORIG_STOP_ID,
+                  ResourceId: ORIG_RESOURCE_ID,
+                  start: 0,
+                  end: null,
+                  pauseAtEnd: null,
+                  options: null,
+                  Resource: {
+                    id: ORIG_RESOURCE_ID,
+                    name: 'Imported Image',
+                    type: 'IMAGE',
+                    data: null,
+                    variants: [{ name: 'English (US)', displayName: 'English', code: 'en-us' }],
+                    Files: [
+                      {
+                        id: ORIG_FILE_ID,
+                        ResourceId: ORIG_RESOURCE_ID,
+                        variant: 'en-us',
+                        externalURL: null,
+                        key: 'cdd8007d-dcaf-4163-b497-92d378679668.png',
+                        originalName: '512x512.png',
+                        duration: null,
+                        width: 512,
+                        height: 512,
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      };
+    }
+
+    it('creates a new Tour with Stops, Resources, and Files from a ZIP', async () => {
+      const exportData = buildExportData();
+      const zip = new AdmZip();
+      zip.addFile('tour.json', Buffer.from(JSON.stringify(exportData)));
+      const fileContent = fs.readFileSync(path.resolve(__dirname, '../../fixtures/files/512x512.png'));
+      zip.addFile(`files/${ORIG_FILE_ID}/key/cdd8007d-dcaf-4163-b497-92d378679668.png`, fileContent);
+      await s3.putObjectData('uploads/test-import.zip', zip.toBuffer());
+
+      const response = await testSession
+        .post('/api/tours/import')
+        .set('Accept', 'application/json')
+        .send({ TeamId: '1a93d46d-89bf-463b-ab23-8f22f5777907', signed_id: 'test-import.zip' })
+        .expect(StatusCodes.CREATED);
+
+      assert.ok(response.body.id);
+      assert.deepStrictEqual(response.body.link, 'imported-tour');
+      assert.deepStrictEqual(response.body.name, 'Imported Tour');
+
+      const tourStops = await models.TourStop.findAll({ where: { TourId: response.body.id } });
+      assert.deepStrictEqual(tourStops.length, 1);
+
+      const stop = await models.Stop.findByPk(tourStops[0].StopId);
+      assert.ok(stop);
+      assert.deepStrictEqual(stop.link, 'imported-stop');
+
+      const stopResources = await models.StopResource.findAll({ where: { StopId: stop.id } });
+      assert.deepStrictEqual(stopResources.length, 1);
+
+      const resource = await models.Resource.findByPk(stopResources[0].ResourceId);
+      assert.ok(resource);
+      assert.deepStrictEqual(resource.name, 'Imported Image');
+      assert.deepStrictEqual(resource.type, 'IMAGE');
+
+      const files = await models.File.findAll({ where: { ResourceId: resource.id } });
+      assert.deepStrictEqual(files.length, 1);
+      assert.deepStrictEqual(files[0].key, 'cdd8007d-dcaf-4163-b497-92d378679668.png');
+      assert.deepStrictEqual(files[0].originalName, '512x512.png');
+
+      assert.ok(await helper.assetPathExists(`files/${files[0].id}/key/cdd8007d-dcaf-4163-b497-92d378679668.png`));
+      assert.deepStrictEqual(await s3.objectExists('uploads/test-import.zip'), false);
+    });
+
+    it('resolves Tour link conflicts automatically', async () => {
+      const exportData = buildExportData('tour2');
+      const zip = new AdmZip();
+      zip.addFile('tour.json', Buffer.from(JSON.stringify(exportData)));
+      await s3.putObjectData('uploads/test-conflict.zip', zip.toBuffer());
+
+      const response = await testSession
+        .post('/api/tours/import')
+        .set('Accept', 'application/json')
+        .send({ TeamId: '1a93d46d-89bf-463b-ab23-8f22f5777907', signed_id: 'test-conflict.zip' })
+        .expect(StatusCodes.CREATED);
+
+      assert.deepStrictEqual(response.body.link, 'tour2-1');
     });
   });
 });
