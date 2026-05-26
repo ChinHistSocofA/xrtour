@@ -37,7 +37,21 @@ function buildStopResourceData(sr) {
 }
 
 function buildStopData(stop) {
-  const data = _.pick(stop.get(), ['id', 'type', 'link', 'name', 'address', 'coordinate', 'radius', 'destAddress', 'destCoordinate', 'destRadius', 'names', 'descriptions', 'variants']);
+  const data = _.pick(stop.get(), [
+    'id',
+    'type',
+    'link',
+    'name',
+    'address',
+    'coordinate',
+    'radius',
+    'destAddress',
+    'destCoordinate',
+    'destRadius',
+    'names',
+    'descriptions',
+    'variants',
+  ]);
   if (stop.Resources) {
     data.Resources = stop.Resources.map(buildStopResourceData);
   }
@@ -189,7 +203,14 @@ router.post('/import', interceptors.requireLogin, async (req, res) => {
         const newResourceId = uuid();
         newResourceIdMap.set(oldResourceId, newResourceId);
         await models.Resource.create(
-          { id: newResourceId, TeamId, name: resourceData.name, type: resourceData.type, data: resourceData.data ?? {}, variants: resourceData.variants },
+          {
+            id: newResourceId,
+            TeamId,
+            name: resourceData.name,
+            type: resourceData.type,
+            data: resourceData.data ?? {},
+            variants: resourceData.variants,
+          },
           { transaction }
         );
         for (const fileData of resourceData.Files ?? []) {
@@ -343,8 +364,15 @@ router.get('/:id/export', interceptors.requireLogin, async (req, res) => {
       {
         model: models.TourStop,
         include: [
-          { model: models.Stop, include: { model: models.StopResource, as: 'Resources', include: { model: models.Resource, include: 'Files' } } },
-          { model: models.Stop, as: 'TransitionStop', include: { model: models.StopResource, as: 'Resources', include: { model: models.Resource, include: 'Files' } } },
+          {
+            model: models.Stop,
+            include: { model: models.StopResource, as: 'Resources', include: { model: models.Resource, include: 'Files' } },
+          },
+          {
+            model: models.Stop,
+            as: 'TransitionStop',
+            include: { model: models.StopResource, as: 'Resources', include: { model: models.Resource, include: 'Files' } },
+          },
         ],
       },
     ],

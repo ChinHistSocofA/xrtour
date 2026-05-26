@@ -483,15 +483,11 @@ describe('/api/tours', () => {
       assert.deepStrictEqual(tourData.TourStops[0].Stop.Resources[0].Resource.Files[0].URL, undefined);
 
       // Binary asset entries present for files with keys
-      const imageEntry = zip.getEntry(
-        'files/ed2f158a-e44e-432d-971e-e5da1a2e33b4/key/cdd8007d-dcaf-4163-b497-92d378679668.png'
-      );
+      const imageEntry = zip.getEntry('files/ed2f158a-e44e-432d-971e-e5da1a2e33b4/key/cdd8007d-dcaf-4163-b497-92d378679668.png');
       assert.ok(imageEntry);
       assert.ok(imageEntry.getData().length > 0);
 
-      const audioEntry = zip.getEntry(
-        'files/84b62056-05a4-4751-953f-7854ac46bc0f/key/d2e150be-b277-4f68-96c7-22a477e0022f.m4a'
-      );
+      const audioEntry = zip.getEntry('files/84b62056-05a4-4751-953f-7854ac46bc0f/key/d2e150be-b277-4f68-96c7-22a477e0022f.m4a');
       assert.ok(audioEntry);
       assert.ok(audioEntry.getData().length > 0);
     });
