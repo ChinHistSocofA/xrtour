@@ -229,6 +229,12 @@ const Api = {
     delete(id) {
       return instance.delete(`/api/tours/${id}?isPermanent=true`);
     },
+    export(id) {
+      return instance.get(`/api/tours/${id}/export`, { responseType: 'blob' });
+    },
+    import(TeamId, signed_id) {
+      return instance.post(`/api/tours/import`, { TeamId, signed_id });
+    },
     stops(TourId) {
       return {
         index() {

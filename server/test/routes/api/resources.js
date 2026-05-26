@@ -94,6 +94,7 @@ describe('/api/resources', () => {
         createdAt: response.body.createdAt,
         updatedAt: response.body.updatedAt,
         archivedAt: null,
+        Files: [response.body.Files[0]],
       });
 
       const record = await models.Resource.findByPk(response.body.id);

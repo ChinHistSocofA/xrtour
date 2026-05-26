@@ -207,6 +207,9 @@ function Tour() {
                         <button onClick={() => setConfirmArchiveShowing(true)} type="button" className="btn btn-outline-primary">
                           Archive
                         </button>
+                        <a download href={`/api/tours/${TourId}/export`} className="btn btn-outline-primary ms-2">
+                          Export
+                        </a>
                       </div>
                     )}
                     {isArchived && isEditor && (
@@ -290,7 +293,13 @@ function Tour() {
           </>
         )}
         {isShowingResourcesModal && (
-          <ResourcesModal isShowing={true} onHide={onHideResourcesModal} onSelect={onSelectResource} types={['IMAGE']} />
+          <ResourcesModal
+            isShowing={true}
+            onHide={onHideResourcesModal}
+            onSelect={onSelectResource}
+            types={['IMAGE']}
+            variants={tour?.variants}
+          />
         )}
         {isShowingStopsModal && (
           <StopsModal
