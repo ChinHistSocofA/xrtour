@@ -1,5 +1,5 @@
 import { Helmet } from 'react-helmet-async';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faList, faPlus, faTableCells } from '@fortawesome/free-solid-svg-icons';
@@ -24,6 +24,9 @@ function ToursList() {
   const page = parseInt(searchParams.get('page') ?? '1', 10);
   const [lastPage, setLastPage] = useState(page);
   const [tours, setTours] = useState();
+  const [isImporting, setIsImporting] = useState(false);
+  const [importError, setImportError] = useState(null);
+  const importFileRef = useRef(null);
 
   useEffect(() => {
     if (!membership) return;
@@ -56,6 +59,25 @@ function ToursList() {
     }
   }
 
+  async function onImportFileChange(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    importFileRef.current.value = '';
+    setIsImporting(true);
+    setImportError(null);
+    try {
+      const blob = { filename: file.name, content_type: 'application/zip', byte_size: file.size };
+      const assetResponse = await Api.assets.create({ blob });
+      const { signed_id, direct_upload } = assetResponse.data;
+      await Api.assets.upload(direct_upload.url, direct_upload.headers, file);
+      const importResponse = await Api.tours.import(membership.TeamId, signed_id);
+      navigate(importResponse.data.id);
+    } catch (err) {
+      setImportError(err?.response?.data?.message ?? 'Import failed. Please check the file and try again.');
+      setIsImporting(false);
+    }
+  }
+
   return (
     <>
       <Helmet>
@@ -68,10 +90,17 @@ function ToursList() {
         <div className="mb-3 d-flex justify-content-between align-items-center">
           <div>
             {membership?.role !== 'VIEWER' && (
-              <Link to="new" className="btn btn-primary">
-                <FontAwesomeIcon icon={faPlus} /> New Tour
-              </Link>
+              <>
+                <Link to="new" className="btn btn-primary">
+                  <FontAwesomeIcon icon={faPlus} /> New Tour
+                </Link>
+                <button className="btn btn-outline-primary ms-2" disabled={isImporting} onClick={() => importFileRef.current.click()}>
+                  {isImporting ? 'Importing...' : 'Import Tour'}
+                </button>
+                <input ref={importFileRef} type="file" accept=".zip" className="d-none" onChange={onImportFileChange} />
+              </>
             )}
+            {importError && <div className="text-danger mt-2">{importError}</div>}
           </div>
           <div className="d-flex align-items-center">
             <span className="me-2">Show:</span>
