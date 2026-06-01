@@ -388,20 +388,14 @@ router.get('/:id/export', interceptors.requireLogin, async (req, res) => {
   }
   const exportData = buildExportData(record);
   const fileInstances = collectFileInstances(record);
-  const fileBuffers = await Promise.all(
-    fileInstances.map(async (f) => ({
-      name: `files/${f.id}/key/${f.key}`,
-      data: await s3.getObjectData(f.getAssetPath('key')),
-    }))
-  );
   try {
     res.set('Content-Type', 'application/zip');
     res.set('Content-Disposition', `attachment; filename="tour-${record.link}.zip"`);
     const archive = new ZipArchive();
     archive.pipe(res);
     archive.append(JSON.stringify(exportData, null, 2), { name: 'tour.json' });
-    for (const { name, data } of fileBuffers) {
-      archive.append(Buffer.from(data), { name });
+    for (const f of fileInstances) {
+      archive.append(Buffer.from(await s3.getObjectData(f.getAssetPath('key'))), { name: `files/${f.id}/key/${f.key}` });
     }
     await new Promise((resolve, reject) => {
       archive.on('finish', resolve);
