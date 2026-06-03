@@ -1,0 +1,68 @@
+#!/usr/bin/env node
+
+import 'dotenv/config';
+import fs from 'fs-extra';
+import mime from 'mime-types';
+import path from 'path';
+
+import { optimizeImage, optimizeAudio } from '../lib/optimize.js';
+import s3 from '../lib/s3.js';
+import models from '../models/index.js';
+
+const files = await models.File.findAll({
+  where: { key: { [models.Sequelize.Op.ne]: null } },
+  order: [['id', 'ASC']],
+});
+
+console.log(`Processing ${files.length} file records...`);
+
+let optimized = 0;
+let skipped = 0;
+let errors = 0;
+
+for (const file of files) {
+  const assetPath = file.getAssetPath('key');
+  if (!assetPath) continue;
+
+  const contentType = mime.lookup(file.key) || '';
+  const isImage = contentType.startsWith('image/');
+  const isWav = contentType === 'audio/wav' || contentType === 'audio/x-wav' || contentType === 'audio/wave';
+
+  if (!isImage && !isWav) {
+    skipped++;
+    continue;
+  }
+
+  const dir = path.dirname(assetPath);
+  const base = path.basename(assetPath, path.extname(assetPath));
+
+  const alreadyExists = isWav
+    ? await s3.objectExists(path.join(dir, `${base}-optimized.mp3`))
+    : (await s3.objectExists(path.join(dir, `${base}-optimized.jpg`))) ||
+      (await s3.objectExists(path.join(dir, `${base}-optimized.png`)));
+
+  if (alreadyExists) {
+    console.log(`  skip  ${assetPath}`);
+    skipped++;
+    continue;
+  }
+
+  let localPath;
+  try {
+    localPath = await s3.getObject(assetPath);
+    const result = isImage ? await optimizeImage(localPath) : await optimizeAudio(localPath);
+    const optimizedKey = path.join(dir, path.basename(result.outputPath));
+    await s3.putObject(optimizedKey, result.outputPath, result.contentType);
+    await fs.remove(result.outputPath);
+    console.log(`  ok    ${assetPath} → ${path.basename(result.outputPath)}`);
+    optimized++;
+  } catch (err) {
+    console.error(`  error ${assetPath}: ${err.message}`);
+    errors++;
+  } finally {
+    if (localPath) await fs.remove(localPath).catch(() => {});
+  }
+}
+
+console.log(`\nDone. optimized=${optimized} skipped=${skipped} errors=${errors}`);
+await models.sequelize.close();
