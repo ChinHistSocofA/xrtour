@@ -100,7 +100,7 @@ Sequelize.Model.prototype.handleAssetFile = async function handleAssetFile(attri
         if (contentType.startsWith('image/')) {
           localPath = await s3.getObject(newPath);
           result = await optimizeImage(localPath);
-        } else if (contentType === 'audio/wav' || contentType === 'audio/x-wav') {
+        } else if (contentType === 'audio/wav' || contentType === 'audio/x-wav' || contentType === 'audio/wave') {
           localPath = await s3.getObject(newPath);
           result = await optimizeAudio(localPath);
         }
