@@ -72,7 +72,10 @@ describe('/api/files', () => {
       );
       const file = await models.File.findByPk('ed2f158a-e44e-432d-971e-e5da1a2e33b4');
       assert.equal(file.optimizedKey, 'b45136f4-54e4-45cd-8851-efc9d733a573-optimized.jpg');
-      assert.equal(file.optimizedKeyURL, '/api/assets/files/ed2f158a-e44e-432d-971e-e5da1a2e33b4/key/b45136f4-54e4-45cd-8851-efc9d733a573-optimized.jpg');
+      assert.equal(
+        file.optimizedKeyURL,
+        '/api/assets/files/ed2f158a-e44e-432d-971e-e5da1a2e33b4/key/b45136f4-54e4-45cd-8851-efc9d733a573-optimized.jpg'
+      );
     });
 
     it('creates an optimized png for a png with transparency', async function () {
@@ -101,7 +104,10 @@ describe('/api/files', () => {
       );
       const file = await models.File.findByPk('ed2f158a-e44e-432d-971e-e5da1a2e33b4');
       assert.equal(file.optimizedKey, 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa-optimized.png');
-      assert.equal(file.optimizedKeyURL, '/api/assets/files/ed2f158a-e44e-432d-971e-e5da1a2e33b4/key/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa-optimized.png');
+      assert.equal(
+        file.optimizedKeyURL,
+        '/api/assets/files/ed2f158a-e44e-432d-971e-e5da1a2e33b4/key/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa-optimized.png'
+      );
     });
 
     it('creates an optimized mp3 for a wav file', async function () {
@@ -125,7 +131,10 @@ describe('/api/files', () => {
       );
       const file = await models.File.findByPk('84b62056-05a4-4751-953f-7854ac46bc0f');
       assert.equal(file.optimizedKey, 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb-optimized.mp3');
-      assert.equal(file.optimizedKeyURL, '/api/assets/files/84b62056-05a4-4751-953f-7854ac46bc0f/key/bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb-optimized.mp3');
+      assert.equal(
+        file.optimizedKeyURL,
+        '/api/assets/files/84b62056-05a4-4751-953f-7854ac46bc0f/key/bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb-optimized.mp3'
+      );
     });
   });
 
