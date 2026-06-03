@@ -151,7 +151,9 @@ describe('/api/files', () => {
       }
 
       let response = await testSession
-        .get('/api/files/translate?key=41eca218-23a8-4b15-9a3f-bbf5be74dc6c.vtt&source=en-us&target=es')
+        .get(
+          '/api/files/translate?id=9b02374a-0c85-473b-8b08-d96a038f2982&key=41eca218-23a8-4b15-9a3f-bbf5be74dc6c.vtt&source=en-us&target=es&originalName=subtitles.vtt'
+        )
         .set('Accept', 'application/json')
         .expect(StatusCodes.OK);
 
