@@ -43,7 +43,13 @@ export default function (sequelize, DataTypes) {
         },
       },
       externalURL: DataTypes.TEXT,
-      key: DataTypes.TEXT,
+      key: {
+        type: DataTypes.TEXT,
+        set(value) {
+          this.setDataValue('key', value);
+          this.setDataValue('optimizedKey', null);
+        },
+      },
       keyURL: {
         type: DataTypes.VIRTUAL(DataTypes.TEXT, ['key']),
         get() {
@@ -79,12 +85,12 @@ export default function (sequelize, DataTypes) {
   );
 
   File.afterSave(async (file, options) => {
-    file.handleAssetFile('key', options);
+    return file.handleAssetFile('key', options);
   });
 
   File.afterDestroy(async (file, options) => {
     file.key = null;
-    file.handleAssetFile('key', options);
+    return file.handleAssetFile('key', options);
   });
 
   return File;

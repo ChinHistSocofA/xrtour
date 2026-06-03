@@ -129,7 +129,7 @@ describe('/api/stops/:StopId/resources', () => {
                 duration: null,
                 width: null,
                 height: null,
-                URL: '/api/assets/files/ed2f158a-e44e-432d-971e-e5da1a2e33b4/key/cdd8007d-dcaf-4163-b497-92d378679668.png',
+                URL: '/api/assets/files/ed2f158a-e44e-432d-971e-e5da1a2e33b4/key/cdd8007d-dcaf-4163-b497-92d378679668-optimized.jpg',
               },
             ],
             createdAt: response.body[1].Resource.createdAt,
@@ -187,7 +187,7 @@ describe('/api/stops/:StopId/resources', () => {
               duration: null,
               width: null,
               height: null,
-              URL: '/api/assets/files/ed2f158a-e44e-432d-971e-e5da1a2e33b4/key/cdd8007d-dcaf-4163-b497-92d378679668.png',
+              URL: '/api/assets/files/ed2f158a-e44e-432d-971e-e5da1a2e33b4/key/cdd8007d-dcaf-4163-b497-92d378679668-optimized.jpg',
             },
           ],
           createdAt: response.body.Resource.createdAt,
@@ -226,7 +226,7 @@ describe('/api/stops/:StopId/resources', () => {
           Files: [
             {
               ResourceId: '0cb2ce76-c5ca-454f-9fb1-47051b0f21ab',
-              URL: '/api/assets/files/ed2f158a-e44e-432d-971e-e5da1a2e33b4/key/cdd8007d-dcaf-4163-b497-92d378679668.png',
+              URL: '/api/assets/files/ed2f158a-e44e-432d-971e-e5da1a2e33b4/key/cdd8007d-dcaf-4163-b497-92d378679668-optimized.jpg',
               externalURL: null,
               id: 'ed2f158a-e44e-432d-971e-e5da1a2e33b4',
               key: 'cdd8007d-dcaf-4163-b497-92d378679668.png',

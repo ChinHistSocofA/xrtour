@@ -104,7 +104,7 @@ describe('/api/versions', () => {
             'files',
             'ed2f158a-e44e-432d-971e-e5da1a2e33b4',
             'key',
-            'cdd8007d-dcaf-4163-b497-92d378679668.png'
+            'cdd8007d-dcaf-4163-b497-92d378679668-optimized.jpg'
           )
         )
       );

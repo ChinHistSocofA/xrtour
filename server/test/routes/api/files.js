@@ -44,15 +44,16 @@ describe('/api/files', () => {
         })
         .expect(StatusCodes.OK);
 
-      // optimizedKey/optimizedKeyURL are set asynchronously; check them after sleep below
-      const { optimizedKey: _ok, optimizedKeyURL: _oku, ...syncData } = response.body;
-      assert.deepStrictEqual(syncData, {
+      // optimizedKey/optimizedKeyURL are set asynchronously; fetch the file from the DB after sleep
+      assert.deepStrictEqual(response.body, {
         id: 'ed2f158a-e44e-432d-971e-e5da1a2e33b4',
         ResourceId: '0cb2ce76-c5ca-454f-9fb1-47051b0f21ab',
         variant: 'en-us',
         externalURL: null,
         key: 'b45136f4-54e4-45cd-8851-efc9d733a573.png',
         keyURL: '/api/assets/files/ed2f158a-e44e-432d-971e-e5da1a2e33b4/key/b45136f4-54e4-45cd-8851-efc9d733a573.png',
+        optimizedKey: null,
+        optimizedKeyURL: null,
         originalName: null,
         duration: null,
         width: null,
@@ -74,6 +75,10 @@ describe('/api/files', () => {
       assert.equal(file.optimizedKey, 'b45136f4-54e4-45cd-8851-efc9d733a573-optimized.jpg');
       assert.equal(
         file.optimizedKeyURL,
+        '/api/assets/files/ed2f158a-e44e-432d-971e-e5da1a2e33b4/key/b45136f4-54e4-45cd-8851-efc9d733a573-optimized.jpg'
+      );
+      assert.equal(
+        file.URL,
         '/api/assets/files/ed2f158a-e44e-432d-971e-e5da1a2e33b4/key/b45136f4-54e4-45cd-8851-efc9d733a573-optimized.jpg'
       );
     });
