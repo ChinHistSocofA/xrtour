@@ -33,17 +33,32 @@ for (const file of files) {
     continue;
   }
 
+  if (file.optimizedKey) {
+    console.log(`  skip  ${assetPath}`);
+    skipped++;
+    continue;
+  }
+
   const dir = path.dirname(assetPath);
   const base = path.basename(assetPath, path.extname(assetPath));
 
-  const alreadyExists = isWav
-    ? await s3.objectExists(path.join(dir, `${base}-optimized.mp3`))
-    : (await s3.objectExists(path.join(dir, `${base}-optimized.jpg`))) ||
-      (await s3.objectExists(path.join(dir, `${base}-optimized.png`)));
+  let optimizedBasename;
+  if (isWav) {
+    if (await s3.objectExists(path.join(dir, `${base}-optimized.mp3`))) {
+      optimizedBasename = `${base}-optimized.mp3`;
+    }
+  } else {
+    if (await s3.objectExists(path.join(dir, `${base}-optimized.jpg`))) {
+      optimizedBasename = `${base}-optimized.jpg`;
+    } else if (await s3.objectExists(path.join(dir, `${base}-optimized.png`))) {
+      optimizedBasename = `${base}-optimized.png`;
+    }
+  }
 
-  if (alreadyExists) {
-    console.log(`  skip  ${assetPath}`);
-    skipped++;
+  if (optimizedBasename) {
+    await models.File.update({ optimizedKey: optimizedBasename }, { where: { id: file.id }, hooks: false });
+    console.log(`  sync  ${assetPath} → ${optimizedBasename}`);
+    optimized++;
     continue;
   }
 
@@ -51,10 +66,11 @@ for (const file of files) {
   try {
     localPath = await s3.getObject(assetPath);
     const result = isImage ? await optimizeImage(localPath) : await optimizeAudio(localPath);
-    const optimizedKey = path.join(dir, path.basename(result.outputPath));
-    await s3.putObject(optimizedKey, result.outputPath, result.contentType);
+    optimizedBasename = path.basename(result.outputPath);
+    await s3.putObject(path.join(dir, optimizedBasename), result.outputPath, result.contentType);
     await fs.remove(result.outputPath);
-    console.log(`  ok    ${assetPath} → ${path.basename(result.outputPath)}`);
+    await models.File.update({ optimizedKey: optimizedBasename }, { where: { id: file.id }, hooks: false });
+    console.log(`  ok    ${assetPath} → ${optimizedBasename}`);
     optimized++;
   } catch (err) {
     console.error(`  error ${assetPath}: ${err.message}`);
