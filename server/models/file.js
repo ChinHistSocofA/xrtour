@@ -66,9 +66,9 @@ export default function (sequelize, DataTypes) {
       width: DataTypes.INTEGER,
       height: DataTypes.INTEGER,
       URL: {
-        type: DataTypes.VIRTUAL(DataTypes.TEXT, ['externalURL', 'key']),
+        type: DataTypes.VIRTUAL(DataTypes.TEXT, ['externalURL', 'optimizedKey', 'key']),
         get() {
-          return this.externalURL ? this.externalURL : this.keyURL;
+          return this.externalURL ? this.externalURL : (this.optimizedKey ? this.optimizedKeyURL : this.keyURL);
         },
       },
     },
