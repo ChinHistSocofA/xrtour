@@ -12,8 +12,7 @@ function ImageSphere({ onClose, resource, variant }) {
     import('react-photo-sphere-viewer').then((pkg) => setReactPhotoSphereViewer(pkg.ReactPhotoSphereViewer));
   }, []);
 
-  const file = resource.Files.find((f) => f.variant === variant.code);
-  const imageURL = file?.optimizedKeyURL ?? file?.URL;
+  const imageURL = resource.Files.find((f) => f.variant === variant.code)?.URL;
 
   async function onReady(instance) {
     const gyroPlugin = instance.getPlugin(GyroscopePlugin);
