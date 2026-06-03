@@ -87,6 +87,10 @@ Sequelize.Model.prototype.handleAssetFile = async function handleAssetFile(attri
     if (prevFile) {
       prevPath = path.join(assetPrefix, pathPrefix, prevFile);
       await s3.deleteObject(prevPath);
+      const prevOptimizedKey = this.get('optimizedKey');
+      if (prevOptimizedKey) {
+        await s3.deleteObject(path.join(assetPrefix, pathPrefix, prevOptimizedKey));
+      }
     }
     if (newFile) {
       newPath = path.join(assetPrefix, pathPrefix, path.basename(newFile));
@@ -105,9 +109,13 @@ Sequelize.Model.prototype.handleAssetFile = async function handleAssetFile(attri
           result = await optimizeAudio(localPath);
         }
         if (result) {
-          const optimizedKey = path.join(assetPrefix, pathPrefix, path.basename(result.outputPath));
+          const optimizedBasename = path.basename(result.outputPath);
+          const optimizedKey = path.join(assetPrefix, pathPrefix, optimizedBasename);
           await s3.putObject(optimizedKey, result.outputPath, result.contentType);
           await fs.remove(result.outputPath);
+          if (this.constructor.rawAttributes.optimizedKey !== undefined) {
+            await this.constructor.update({ optimizedKey: optimizedBasename }, { where: { id: this.id }, hooks: false });
+          }
         }
         if (localPath) {
           await fs.remove(localPath);

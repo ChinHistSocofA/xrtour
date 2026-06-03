@@ -5,6 +5,7 @@ import session from 'supertest-session';
 
 import helper from '../../helper.js';
 import app from '../../../app.js';
+import models from '../../../models/index.js';
 import s3 from '../../../lib/s3.js';
 
 describe('/api/files', () => {
@@ -43,8 +44,9 @@ describe('/api/files', () => {
         })
         .expect(StatusCodes.OK);
 
-      const data = { ...response.body };
-      assert.deepStrictEqual(data, {
+      // optimizedKey/optimizedKeyURL are set asynchronously; check them after sleep below
+      const { optimizedKey: _ok, optimizedKeyURL: _oku, ...syncData } = response.body;
+      assert.deepStrictEqual(syncData, {
         id: 'ed2f158a-e44e-432d-971e-e5da1a2e33b4',
         ResourceId: '0cb2ce76-c5ca-454f-9fb1-47051b0f21ab',
         variant: 'en-us',
@@ -68,6 +70,9 @@ describe('/api/files', () => {
           path.join('files', 'ed2f158a-e44e-432d-971e-e5da1a2e33b4', 'key', 'b45136f4-54e4-45cd-8851-efc9d733a573-optimized.jpg')
         )
       );
+      const file = await models.File.findByPk('ed2f158a-e44e-432d-971e-e5da1a2e33b4');
+      assert.equal(file.optimizedKey, 'b45136f4-54e4-45cd-8851-efc9d733a573-optimized.jpg');
+      assert.equal(file.optimizedKeyURL, '/api/assets/files/ed2f158a-e44e-432d-971e-e5da1a2e33b4/key/b45136f4-54e4-45cd-8851-efc9d733a573-optimized.jpg');
     });
 
     it('creates an optimized png for a png with transparency', async function () {
@@ -94,6 +99,9 @@ describe('/api/files', () => {
           path.join('files', 'ed2f158a-e44e-432d-971e-e5da1a2e33b4', 'key', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa-optimized.jpg')
         ))
       );
+      const file = await models.File.findByPk('ed2f158a-e44e-432d-971e-e5da1a2e33b4');
+      assert.equal(file.optimizedKey, 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa-optimized.png');
+      assert.equal(file.optimizedKeyURL, '/api/assets/files/ed2f158a-e44e-432d-971e-e5da1a2e33b4/key/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa-optimized.png');
     });
 
     it('creates an optimized mp3 for a wav file', async function () {
@@ -115,6 +123,9 @@ describe('/api/files', () => {
           path.join('files', '84b62056-05a4-4751-953f-7854ac46bc0f', 'key', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb-optimized.mp3')
         )
       );
+      const file = await models.File.findByPk('84b62056-05a4-4751-953f-7854ac46bc0f');
+      assert.equal(file.optimizedKey, 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb-optimized.mp3');
+      assert.equal(file.optimizedKeyURL, '/api/assets/files/84b62056-05a4-4751-953f-7854ac46bc0f/key/bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb-optimized.mp3');
     });
   });
 

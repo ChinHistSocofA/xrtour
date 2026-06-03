@@ -1,3 +1,4 @@
+import path from 'path';
 import { Model } from 'sequelize';
 import _ from 'lodash';
 
@@ -15,6 +16,8 @@ export default function (sequelize, DataTypes) {
         'externalURL',
         'key',
         'keyURL',
+        'optimizedKey',
+        'optimizedKeyURL',
         'originalName',
         'duration',
         'width',
@@ -45,6 +48,17 @@ export default function (sequelize, DataTypes) {
         type: DataTypes.VIRTUAL(DataTypes.TEXT, ['key']),
         get() {
           return this.assetUrl('key');
+        },
+      },
+      optimizedKey: DataTypes.TEXT,
+      optimizedKeyURL: {
+        type: DataTypes.VIRTUAL(DataTypes.TEXT, ['optimizedKey']),
+        get() {
+          const file = this.get('optimizedKey');
+          if (file) {
+            return path.resolve('/api/assets/', `files/${this.id}/key`, path.basename(file));
+          }
+          return null;
         },
       },
       originalName: DataTypes.STRING,
