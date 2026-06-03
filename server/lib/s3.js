@@ -158,14 +158,16 @@ async function objectExists(Key) {
   }
 }
 
-function putObject(Key, filePath) {
-  return client.send(
-    new PutObjectCommand({
-      Bucket: process.env.AWS_S3_BUCKET,
-      Key,
-      Body: fs.createReadStream(filePath),
-    })
-  );
+function putObject(Key, filePath, ContentType) {
+  const params = {
+    Bucket: process.env.AWS_S3_BUCKET,
+    Key,
+    Body: fs.createReadStream(filePath),
+  };
+  if (ContentType) {
+    params.ContentType = ContentType;
+  }
+  return client.send(new PutObjectCommand(params));
 }
 
 function putObjectData(Key, Body) {
