@@ -12,8 +12,10 @@ function ImageOverlay({ onClose, resource, variant }) {
   const [opacity, setOpacity] = useState(0.5);
   const [isShowingFallback, setShowingFallback] = useState(false);
 
-  const imageURL = resource.Files.find((f) => f.variant === variant.code)?.URL;
-  const fallbackImageURL = resource.Files.find((f) => f.variant === `${variant.code}-fallback`)?.URL;
+  const imageFile = resource.Files.find((f) => f.variant === variant.code);
+  const imageURL = imageFile?.optimizedKeyURL ?? imageFile?.URL;
+  const fallbackFile = resource.Files.find((f) => f.variant === `${variant.code}-fallback`);
+  const fallbackImageURL = fallbackFile?.optimizedKeyURL ?? fallbackFile?.URL;
 
   return (
     <div className="image-overlay">

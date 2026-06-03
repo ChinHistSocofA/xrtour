@@ -22,6 +22,10 @@ function getVariantFile(files, variant, fallbackVariant, variantSuffix = '') {
   return file;
 }
 
+function getFileURL(file) {
+  return file?.optimizedKeyURL ?? file?.URL;
+}
+
 function StopViewer({
   autoPlay,
   controls,
@@ -87,7 +91,7 @@ function StopViewer({
           newImages.push({ ...sr });
           // preload image
           const img = new Image();
-          img.src = getVariantFile(sr.Resource.Files, variant, fallbackVariant)?.URL;
+          img.src = getFileURL(getVariantFile(sr.Resource.Files, variant, fallbackVariant));
         } else if (
           sr.Resource.type === '3D_MODEL' ||
           sr.Resource.type === 'AR_LINK' ||
@@ -125,7 +129,7 @@ function StopViewer({
             newImages.push({ ...sr, start: offset + sr.start, end: Number.isInteger(sr.end) ? offset + sr.end : null });
             // preload image
             const img = new Image();
-            img.src = getVariantFile(sr.Resource.Files, variant, fallbackVariant)?.URL;
+            img.src = getFileURL(getVariantFile(sr.Resource.Files, variant, fallbackVariant));
           } else if (
             sr.Resource.type === '3D_MODEL' ||
             sr.Resource.type === 'AR_LINK' ||
@@ -153,7 +157,7 @@ function StopViewer({
       let newImageOptions;
       for (const sr of images) {
         if (((position === 0 && sr.start <= position) || sr.start < position) && (sr.end ?? Number.MAX_SAFE_INTEGER) >= position) {
-          newImageURL = getVariantFile(sr.Resource.Files, variant, fallbackVariant)?.URL;
+          newImageURL = getFileURL(getVariantFile(sr.Resource.Files, variant, fallbackVariant));
           newImageOptions = sr.options;
           break;
         }
@@ -285,7 +289,7 @@ function StopViewer({
         setSelectedOverlay(currentOverlay);
         break;
       case 'AR_LINK':
-        window.open(getVariantFile(currentOverlay.Resource.Files, variant, fallbackVariant)?.URL, '_blank');
+        window.open(getFileURL(getVariantFile(currentOverlay.Resource.Files, variant, fallbackVariant)), '_blank');
         break;
       case 'IMAGE_OVERLAY':
         setSelectedOverlay(currentOverlay);
@@ -319,7 +323,7 @@ function StopViewer({
       id={sr.id}
       key={sr.id}
       ref={(el) => el && (ref.current[el.id] = el)}
-      src={getVariantFile(sr.Resource.Files, variant, fallbackVariant)?.URL}
+      src={getFileURL(getVariantFile(sr.Resource.Files, variant, fallbackVariant))}
       onTimeUpdate={onTimeUpdateInternal}
       onEnded={onEndedInternal}>
       {(() => {
