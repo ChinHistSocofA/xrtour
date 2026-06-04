@@ -1,3 +1,4 @@
+import path from 'path';
 import { Model } from 'sequelize';
 import _ from 'lodash';
 
@@ -15,6 +16,8 @@ export default function (sequelize, DataTypes) {
         'externalURL',
         'key',
         'keyURL',
+        'optimizedKey',
+        'optimizedKeyURL',
         'originalName',
         'duration',
         'width',
@@ -40,11 +43,28 @@ export default function (sequelize, DataTypes) {
         },
       },
       externalURL: DataTypes.TEXT,
-      key: DataTypes.TEXT,
+      key: {
+        type: DataTypes.TEXT,
+        set(value) {
+          this.setDataValue('key', value);
+          this.setDataValue('optimizedKey', null);
+        },
+      },
       keyURL: {
         type: DataTypes.VIRTUAL(DataTypes.TEXT, ['key']),
         get() {
           return this.assetUrl('key');
+        },
+      },
+      optimizedKey: DataTypes.TEXT,
+      optimizedKeyURL: {
+        type: DataTypes.VIRTUAL(DataTypes.TEXT, ['optimizedKey']),
+        get() {
+          const file = this.get('optimizedKey');
+          if (file) {
+            return path.resolve('/api/assets/', `files/${this.id}/key`, path.basename(file));
+          }
+          return null;
         },
       },
       originalName: DataTypes.STRING,
@@ -52,9 +72,9 @@ export default function (sequelize, DataTypes) {
       width: DataTypes.INTEGER,
       height: DataTypes.INTEGER,
       URL: {
-        type: DataTypes.VIRTUAL(DataTypes.TEXT, ['externalURL', 'key']),
+        type: DataTypes.VIRTUAL(DataTypes.TEXT, ['externalURL', 'optimizedKey', 'key']),
         get() {
-          return this.externalURL ? this.externalURL : this.keyURL;
+          return this.externalURL ? this.externalURL : this.optimizedKey ? this.optimizedKeyURL : this.keyURL;
         },
       },
     },
@@ -65,12 +85,12 @@ export default function (sequelize, DataTypes) {
   );
 
   File.afterSave(async (file, options) => {
-    file.handleAssetFile('key', options);
+    return file.handleAssetFile('key', options);
   });
 
   File.afterDestroy(async (file, options) => {
     file.key = null;
-    file.handleAssetFile('key', options);
+    return file.handleAssetFile('key', options);
   });
 
   return File;

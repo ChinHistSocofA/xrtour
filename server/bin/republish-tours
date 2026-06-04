@@ -1,0 +1,35 @@
+#!/usr/bin/env node
+
+import 'dotenv/config';
+import models from '../models/index.js';
+
+const liveVersions = await models.Version.findAll({
+  where: { isLive: true },
+  include: { model: models.Tour, where: { archivedAt: null } },
+  order: [['TourId', 'ASC']],
+});
+
+console.log(`Found ${liveVersions.length} published tour version(s).`);
+
+let published = 0;
+let errors = 0;
+
+for (const liveVersion of liveVersions) {
+  const { TourId, isStaging } = liveVersion;
+  const label = `${liveVersion.Tour?.link ?? TourId} (${isStaging ? 'staging' : 'live'})`;
+  try {
+    const record = models.Version.build({ TourId, isStaging, isLive: true });
+    await models.sequelize.transaction(async (transaction) => {
+      await models.Version.update({ isLive: false }, { where: { TourId, isStaging }, transaction });
+      await record.publish({ transaction });
+    });
+    console.log(`  ok    ${label} → ${record.id}`);
+    published++;
+  } catch (err) {
+    console.error(`  error ${label}: ${err.message}`);
+    errors++;
+  }
+}
+
+console.log(`\nDone. published=${published} errors=${errors}`);
+await models.sequelize.close();

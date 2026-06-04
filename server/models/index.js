@@ -1,9 +1,11 @@
 import fs from 'fs-extra';
 import inflection from 'inflection';
+import mime from 'mime-types';
 import path from 'path';
 import Sequelize from 'sequelize';
 import { fileURLToPath } from 'url';
 
+import { optimizeImage, optimizeAudio } from '../lib/optimize.js';
 import s3 from '../lib/s3.js';
 import configs from '../config/config.js';
 
@@ -85,11 +87,42 @@ Sequelize.Model.prototype.handleAssetFile = async function handleAssetFile(attri
     if (prevFile) {
       prevPath = path.join(assetPrefix, pathPrefix, prevFile);
       await s3.deleteObject(prevPath);
+      const prevOptimizedKey = this.get('optimizedKey');
+      if (prevOptimizedKey) {
+        await s3.deleteObject(path.join(assetPrefix, pathPrefix, prevOptimizedKey));
+      }
     }
     if (newFile) {
       newPath = path.join(assetPrefix, pathPrefix, path.basename(newFile));
       await s3.copyObject(path.join(process.env.AWS_S3_BUCKET, 'uploads', newFile), newPath);
       await s3.deleteObject(path.join('uploads', newFile));
+      // generate optimized variant alongside the original
+      try {
+        const contentType = mime.lookup(newFile) || '';
+        let result;
+        let localPath;
+        if (contentType.startsWith('image/')) {
+          localPath = await s3.getObject(newPath);
+          result = await optimizeImage(localPath);
+        } else if (contentType === 'audio/wav' || contentType === 'audio/x-wav' || contentType === 'audio/wave') {
+          localPath = await s3.getObject(newPath);
+          result = await optimizeAudio(localPath);
+        }
+        if (result) {
+          const optimizedBasename = path.basename(result.outputPath);
+          const optimizedKey = path.join(assetPrefix, pathPrefix, optimizedBasename);
+          await s3.putObject(optimizedKey, result.outputPath, result.contentType);
+          await fs.remove(result.outputPath);
+          if (this.constructor.rawAttributes.optimizedKey !== undefined) {
+            await this.constructor.update({ optimizedKey: optimizedBasename }, { where: { id: this.id }, hooks: false });
+          }
+        }
+        if (localPath) {
+          await fs.remove(localPath);
+        }
+      } catch (err) {
+        console.error('Asset optimization failed, original preserved:', err);
+      }
     }
     if (callback) {
       await callback(this.id, prevPath, newPath);

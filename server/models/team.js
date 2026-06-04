@@ -94,12 +94,12 @@ export default function (sequelize, DataTypes) {
   );
 
   Team.afterSave(async (record, options) => {
-    record.handleAssetFile('favicon', options);
+    return record.handleAssetFile('favicon', options);
   });
 
   Team.afterDestroy(async (record, options) => {
-    record.key = null;
-    record.handleAssetFile('favicon', options);
+    record.favicon = null;
+    return record.handleAssetFile('favicon', options);
   });
 
   return Team;

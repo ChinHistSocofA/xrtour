@@ -9,7 +9,8 @@ import models from '../../../models/index.js';
 describe('/api/stops/:StopId/resources', () => {
   let testSession;
 
-  beforeEach(async () => {
+  beforeEach(async function () {
+    this.timeout(10000);
     await helper.loadUploads([
       ['512x512.png', 'cdd8007d-dcaf-4163-b497-92d378679668.png'],
       ['testing123.m4a', 'd2e150be-b277-4f68-96c7-22a477e0022f.m4a'],
@@ -27,6 +28,8 @@ describe('/api/stops/:StopId/resources', () => {
       'tourStops',
       'stopResources',
     ]);
+    // wait for async optimization of fixture PNG to complete
+    await helper.sleep(2000);
     testSession = session(app);
     await testSession
       .post('/api/auth/login')
@@ -76,6 +79,8 @@ describe('/api/stops/:StopId/resources', () => {
                 externalURL: null,
                 key: 'd2e150be-b277-4f68-96c7-22a477e0022f.m4a',
                 keyURL: '/api/assets/files/84b62056-05a4-4751-953f-7854ac46bc0f/key/d2e150be-b277-4f68-96c7-22a477e0022f.m4a',
+                optimizedKey: null,
+                optimizedKeyURL: null,
                 originalName: null,
                 duration: null,
                 width: null,
@@ -117,11 +122,14 @@ describe('/api/stops/:StopId/resources', () => {
                 externalURL: null,
                 key: 'cdd8007d-dcaf-4163-b497-92d378679668.png',
                 keyURL: '/api/assets/files/ed2f158a-e44e-432d-971e-e5da1a2e33b4/key/cdd8007d-dcaf-4163-b497-92d378679668.png',
+                optimizedKey: 'cdd8007d-dcaf-4163-b497-92d378679668-optimized.jpg',
+                optimizedKeyURL:
+                  '/api/assets/files/ed2f158a-e44e-432d-971e-e5da1a2e33b4/key/cdd8007d-dcaf-4163-b497-92d378679668-optimized.jpg',
                 originalName: null,
                 duration: null,
                 width: null,
                 height: null,
-                URL: '/api/assets/files/ed2f158a-e44e-432d-971e-e5da1a2e33b4/key/cdd8007d-dcaf-4163-b497-92d378679668.png',
+                URL: '/api/assets/files/ed2f158a-e44e-432d-971e-e5da1a2e33b4/key/cdd8007d-dcaf-4163-b497-92d378679668-optimized.jpg',
               },
             ],
             createdAt: response.body[1].Resource.createdAt,
@@ -166,17 +174,20 @@ describe('/api/stops/:StopId/resources', () => {
           ],
           Files: [
             {
-              ResourceId: '0cb2ce76-c5ca-454f-9fb1-47051b0f21ab',
-              URL: '/api/assets/files/ed2f158a-e44e-432d-971e-e5da1a2e33b4/key/cdd8007d-dcaf-4163-b497-92d378679668.png',
-              externalURL: null,
               id: 'ed2f158a-e44e-432d-971e-e5da1a2e33b4',
+              ResourceId: '0cb2ce76-c5ca-454f-9fb1-47051b0f21ab',
+              variant: 'en-us',
+              externalURL: null,
               key: 'cdd8007d-dcaf-4163-b497-92d378679668.png',
               keyURL: '/api/assets/files/ed2f158a-e44e-432d-971e-e5da1a2e33b4/key/cdd8007d-dcaf-4163-b497-92d378679668.png',
+              optimizedKey: 'cdd8007d-dcaf-4163-b497-92d378679668-optimized.jpg',
+              optimizedKeyURL:
+                '/api/assets/files/ed2f158a-e44e-432d-971e-e5da1a2e33b4/key/cdd8007d-dcaf-4163-b497-92d378679668-optimized.jpg',
               originalName: null,
               duration: null,
               width: null,
               height: null,
-              variant: 'en-us',
+              URL: '/api/assets/files/ed2f158a-e44e-432d-971e-e5da1a2e33b4/key/cdd8007d-dcaf-4163-b497-92d378679668-optimized.jpg',
             },
           ],
           createdAt: response.body.Resource.createdAt,
@@ -215,11 +226,14 @@ describe('/api/stops/:StopId/resources', () => {
           Files: [
             {
               ResourceId: '0cb2ce76-c5ca-454f-9fb1-47051b0f21ab',
-              URL: '/api/assets/files/ed2f158a-e44e-432d-971e-e5da1a2e33b4/key/cdd8007d-dcaf-4163-b497-92d378679668.png',
+              URL: '/api/assets/files/ed2f158a-e44e-432d-971e-e5da1a2e33b4/key/cdd8007d-dcaf-4163-b497-92d378679668-optimized.jpg',
               externalURL: null,
               id: 'ed2f158a-e44e-432d-971e-e5da1a2e33b4',
               key: 'cdd8007d-dcaf-4163-b497-92d378679668.png',
               keyURL: '/api/assets/files/ed2f158a-e44e-432d-971e-e5da1a2e33b4/key/cdd8007d-dcaf-4163-b497-92d378679668.png',
+              optimizedKey: 'cdd8007d-dcaf-4163-b497-92d378679668-optimized.jpg',
+              optimizedKeyURL:
+                '/api/assets/files/ed2f158a-e44e-432d-971e-e5da1a2e33b4/key/cdd8007d-dcaf-4163-b497-92d378679668-optimized.jpg',
               originalName: null,
               duration: null,
               width: null,

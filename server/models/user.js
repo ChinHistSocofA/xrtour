@@ -175,7 +175,7 @@ export default function (sequelize, DataTypes) {
   });
 
   User.afterSave(async (user, options) => {
-    user.handleAssetFile('picture', options);
+    return user.handleAssetFile('picture', options);
   });
 
   return User;

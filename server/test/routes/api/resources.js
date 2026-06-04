@@ -181,6 +181,8 @@ describe('/api/resources', () => {
             id: '84b62056-05a4-4751-953f-7854ac46bc0f',
             key: 'd2e150be-b277-4f68-96c7-22a477e0022f.m4a',
             keyURL: '/api/assets/files/84b62056-05a4-4751-953f-7854ac46bc0f/key/d2e150be-b277-4f68-96c7-22a477e0022f.m4a',
+            optimizedKey: null,
+            optimizedKeyURL: null,
             originalName: null,
             duration: null,
             width: null,
