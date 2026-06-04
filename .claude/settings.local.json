@@ -1,0 +1,5 @@
+{
+  "permissions": {
+    "allow": ["Bash(npm install *)", "Bash(docker exec xrtour-server-1 *)", "Bash(xargs ls -la)"]
+  }
+}
