@@ -10,6 +10,7 @@
     border-color: var(--bs-btn-bg-custom-primary-hover);
     color: white;
   }
+
   &:active {
     background-color: var(--bs-btn-bg-custom-primary-active) !important;
     border-color: var(--bs-btn-bg-custom-primary-active) !important;
@@ -27,6 +28,7 @@
     border-color: var(--bs-btn-bg-custom-secondary-hover);
     color: white;
   }
+
   &:active {
     background-color: var(--bs-btn-bg-custom-secondary-active) !important;
     border-color: var(--bs-btn-bg-custom-secondary-active) !important;
@@ -46,6 +48,7 @@
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }
@@ -55,6 +58,7 @@
   from {
     opacity: 1;
   }
+
   to {
     opacity: 0;
   }
@@ -155,4 +159,12 @@
   bottom: 1rem;
   right: 1rem;
   cursor: pointer;
+}
+
+@media (max-width: 375px) {
+  .stop-viewer__title {
+    top: 2.5rem;
+    left: 4.5rem;
+    right: 4.5rem;
+  }
 }
