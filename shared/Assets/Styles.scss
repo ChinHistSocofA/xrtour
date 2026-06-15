@@ -10,7 +10,19 @@
 
 .btn-transparent {
   box-shadow: none;
+
   &:hover {
     color: lightgray;
+  }
+}
+
+/* Media Queries */
+@media (max-width: 375px) {
+  .btn-round {
+    border-radius: 22px;
+    height: 44px;
+    width: 44px;
+    font-size: 18px;
+    padding-inline: 8px;
   }
 }

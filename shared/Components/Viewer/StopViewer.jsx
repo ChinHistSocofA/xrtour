@@ -386,11 +386,11 @@ function StopViewer({
             </button>
           </div>
         )}
-        <div className="stop-viewer__title h5">
+        <div className="stop-viewer__title">
           {stopIndex ?? '#'}. {stop?.names[variant?.code] || stop?.names[fallbackVariant?.code]}
         </div>
         <div className="stop-viewer__controls">
-          <Scrubber onSeek={onSeek} position={position} duration={duration} className="stop-viewer__scrubber mb-2" />
+          <Scrubber onSeek={onSeek} position={position} duration={duration} className="stop-viewer__scrubber" />
           <div className="d-flex justify-content-between">
             <button className="btn btn-round invisible">&nbsp;</button>
             <button onClick={onPlayPause} type="button" className="btn btn-custom-secondary btn-lg btn-round">
