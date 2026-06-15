@@ -66,3 +66,9 @@
     width: 100%;
   }
 }
+
+@media (max-width: 375px) {
+  .map__close {
+    padding: 0.5rem;
+  }
+}

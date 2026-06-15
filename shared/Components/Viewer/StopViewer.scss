@@ -132,6 +132,7 @@
 
 .stop-viewer__title {
   color: white;
+  font-size: 1.25rem;
   font-weight: 600;
   left: 5.5rem;
   position: absolute;
@@ -140,6 +141,10 @@
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
   top: 3rem;
   transform: translateY(-50%);
+}
+
+.stop-viewer__scrubber {
+  margin-bottom: 0.5rem;
 }
 
 .stop-viewer__subtitles {
@@ -163,8 +168,19 @@
 
 @media (max-width: 375px) {
   .stop-viewer__title {
-    top: 2.5rem;
+    font-size: 1.125rem;
+    top: 1.875rem;
     left: 4.5rem;
     right: 4.5rem;
+  }
+
+  .stop-viewer__toc,
+  .stop-viewer__map,
+  .stop-viewer__controls {
+    padding: 0.5rem;
+  }
+
+  .stop-viewer__scrubber {
+    margin-bottom: 0.25rem;
   }
 }
