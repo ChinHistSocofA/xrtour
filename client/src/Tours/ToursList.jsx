@@ -196,7 +196,8 @@ function ToursList() {
       </main>
       {copyingTour && (
         <ConfirmModal isShowing={true} title="Copy Tour" onCancel={() => setCopyingTour(null)} onOK={onCopy}>
-          Are you sure you want to make a copy of <strong>{copyingTour.name}</strong>? The copy will share the same Stops and Assets as the original Tour.
+          Are you sure you want to make a copy of <strong>{copyingTour.name}</strong>? The copy will share the same Stops and Assets as the
+          original Tour.
         </ConfirmModal>
       )}
       {archivingTour && (
