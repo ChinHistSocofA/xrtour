@@ -235,6 +235,9 @@ const Api = {
     import(TeamId, signed_id) {
       return instance.post(`/api/tours/import`, { TeamId, signed_id });
     },
+    copy(id) {
+      return instance.post(`/api/tours/${id}/copy`);
+    },
     stops(TourId) {
       return {
         index() {
