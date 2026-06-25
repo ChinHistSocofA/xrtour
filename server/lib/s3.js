@@ -115,6 +115,16 @@ async function getObjectData(Key) {
   }
 }
 
+async function getObjectStream(Key) {
+  const response = await client.send(
+    new GetObjectCommand({
+      Bucket: process.env.AWS_S3_BUCKET,
+      Key,
+    })
+  );
+  return response.Body;
+}
+
 function getSignedAssetUrl({ Key, expiresIn = 300, originalName }) {
   if (process.env.AWS_CLOUDFRONT_DOMAIN && !originalName) {
     const url = `https://${process.env.AWS_CLOUDFRONT_DOMAIN}/${Key}`;
@@ -187,6 +197,7 @@ export default {
   deleteObjects,
   getObject,
   getObjectData,
+  getObjectStream,
   getSignedAssetUrl,
   getSignedUploadUrl,
   objectExists,

@@ -395,7 +395,7 @@ router.get('/:id/export', interceptors.requireLogin, async (req, res) => {
     archive.pipe(res);
     archive.append(JSON.stringify(exportData, null, 2), { name: 'tour.json' });
     for (const f of fileInstances) {
-      archive.append(Buffer.from(await s3.getObjectData(f.getAssetPath('key'))), { name: `files/${f.id}/key/${f.key}` });
+      archive.append(await s3.getObjectStream(f.getAssetPath('key')), { name: `files/${f.id}/key/${f.key}` });
     }
     await new Promise((resolve, reject) => {
       archive.on('finish', resolve);
