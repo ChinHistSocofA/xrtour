@@ -633,7 +633,7 @@ describe('/api/tours', () => {
       assert.ok(response.body.id);
       assert.notStrictEqual(response.body.id, '495b18a8-ae05-4f44-a06d-c1809add0352');
       assert.deepStrictEqual(response.body.link, 'tour2-copy');
-      assert.deepStrictEqual(response.body.name, 'Tour 2');
+      assert.deepStrictEqual(response.body.name, 'Tour 2 Copy');
       assert.deepStrictEqual(response.body.names, { 'en-us': 'Tour 2' });
       assert.deepStrictEqual(response.body.descriptions, { 'en-us': 'Tour 2 description' });
       assert.deepStrictEqual(response.body.variants, [{ name: 'English (US)', displayName: 'English', code: 'en-us' }]);
@@ -648,6 +648,28 @@ describe('/api/tours', () => {
 
       const origTourStops = await models.TourStop.findAll({ where: { TourId: '495b18a8-ae05-4f44-a06d-c1809add0352' } });
       assert.deepStrictEqual(origTourStops.length, 2);
+    });
+
+    it('appends "Copy 2" when copying a tour whose name already ends with "Copy"', async () => {
+      await models.Tour.update({ name: 'Tour 2 Copy' }, { where: { id: '495b18a8-ae05-4f44-a06d-c1809add0352' } });
+
+      const response = await testSession
+        .post('/api/tours/495b18a8-ae05-4f44-a06d-c1809add0352/copy')
+        .set('Accept', 'application/json')
+        .expect(StatusCodes.CREATED);
+
+      assert.deepStrictEqual(response.body.name, 'Tour 2 Copy 2');
+    });
+
+    it('increments the copy number when copying a tour whose name already ends with "Copy #"', async () => {
+      await models.Tour.update({ name: 'Tour 2 Copy 5' }, { where: { id: '495b18a8-ae05-4f44-a06d-c1809add0352' } });
+
+      const response = await testSession
+        .post('/api/tours/495b18a8-ae05-4f44-a06d-c1809add0352/copy')
+        .set('Accept', 'application/json')
+        .expect(StatusCodes.CREATED);
+
+      assert.deepStrictEqual(response.body.name, 'Tour 2 Copy 6');
     });
 
     it('resolves link conflicts when copying', async () => {

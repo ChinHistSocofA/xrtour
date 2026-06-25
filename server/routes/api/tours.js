@@ -433,10 +433,17 @@ router.post('/:id/copy', interceptors.requireLogin, async (req, res) => {
     while (await models.Tour.findOne({ where: { TeamId: record.TeamId, link }, transaction })) {
       link = `${record.link}-copy-${suffix++}`;
     }
+    const copyMatch = record.name.match(/^(.*) Copy(?: (\d+))?$/);
+    let name;
+    if (!copyMatch) {
+      name = `${record.name} Copy`;
+    } else {
+      name = `${copyMatch[1]} Copy ${copyMatch[2] ? parseInt(copyMatch[2], 10) + 1 : 2}`;
+    }
     newTour = await models.Tour.create(
       {
         TeamId: record.TeamId,
-        name: record.name,
+        name,
         link,
         names: record.names,
         descriptions: record.descriptions,
