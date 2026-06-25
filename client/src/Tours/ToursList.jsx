@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { Dropdown } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEllipsisVertical, faList, faPlus, faTableCells } from '@fortawesome/free-solid-svg-icons';
+import { faEllipsis, faList, faPlus, faTableCells } from '@fortawesome/free-solid-svg-icons';
 import classNames from 'classnames';
 import { DateTime } from 'luxon';
 
@@ -143,19 +143,20 @@ function ToursList() {
                 <thead>
                   <tr>
                     <th>Name</th>
-                    <th></th>
                     <th className="w-25">Created</th>
+                    <th className="w-5">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {tours.map((tour) => (
                     <tr key={tour.id} onClick={() => navigate(tour.id)}>
                       <td className="align-middle">{tour.name}</td>
-                      <td className="align-middle" onClick={(e) => e.stopPropagation()}>
+                      <td className="align-middle">{DateTime.fromISO(tour.createdAt).toLocaleString(DateTime.DATETIME_SHORT)}</td>
+                      <td className="align-middle text-center" onClick={(e) => e.stopPropagation()}>
                         {membership?.role !== 'VIEWER' && (
                           <Dropdown>
-                            <Dropdown.Toggle as="button" className="btn btn-sm btn-outline-secondary border-0">
-                              <FontAwesomeIcon icon={faEllipsisVertical} />
+                            <Dropdown.Toggle as="button" className="btn btn-sm btn-outline-secondary dropdown-toggle--hidden">
+                              <FontAwesomeIcon icon={faEllipsis} />
                             </Dropdown.Toggle>
                             <Dropdown.Menu>
                               <Dropdown.Item onClick={() => setCopyingTour(tour)}>Copy</Dropdown.Item>
@@ -163,7 +164,6 @@ function ToursList() {
                           </Dropdown>
                         )}
                       </td>
-                      <td className="align-middle">{DateTime.fromISO(tour.createdAt).toLocaleString(DateTime.DATETIME_SHORT)}</td>
                     </tr>
                   ))}
                   {tours.length === 0 && (
@@ -188,7 +188,7 @@ function ToursList() {
       </main>
       {copyingTour && (
         <ConfirmModal isShowing={true} title="Copy Tour" onCancel={() => setCopyingTour(null)} onOK={onCopy}>
-          Are you sure you want to make a copy of <strong>{copyingTour.name}</strong>?
+          Are you sure you want to make a copy of <strong>{copyingTour.name}</strong>? The copy will share the same Stops and Assets as the original Tour.
         </ConfirmModal>
       )}
     </>
