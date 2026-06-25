@@ -71,6 +71,10 @@ label {
   width: 4.5ch;
 }
 
+.dropdown-toggle--hidden::after {
+  display: none !important;
+}
+
 .modal-body {
   overflow-y: scroll;
 }

@@ -1,13 +1,15 @@
 import { Helmet } from 'react-helmet-async';
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
+import { Dropdown } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faList, faPlus, faTableCells } from '@fortawesome/free-solid-svg-icons';
+import { faEllipsis, faList, faPlus, faTableCells } from '@fortawesome/free-solid-svg-icons';
 import classNames from 'classnames';
 import { DateTime } from 'luxon';
 
 import Api from '../Api';
 import { useAuthContext } from '../AuthContext';
+import ConfirmModal from '../Components/ConfirmModal';
 import Pagination from '../Components/Pagination';
 import { useStaticContext } from '../StaticContext';
 
@@ -26,6 +28,8 @@ function ToursList() {
   const [tours, setTours] = useState();
   const [isImporting, setIsImporting] = useState(false);
   const [importError, setImportError] = useState(null);
+  const [copyingTour, setCopyingTour] = useState(null);
+  const [archivingTour, setArchivingTour] = useState(null);
   const importFileRef = useRef(null);
 
   useEffect(() => {
@@ -76,6 +80,19 @@ function ToursList() {
       setImportError(err?.response?.data?.message ?? 'Import failed. Please check the file and try again.');
       setIsImporting(false);
     }
+  }
+
+  async function onArchive() {
+    await Api.tours.archive(archivingTour.id);
+    setArchivingTour(null);
+    setTours(tours.filter((t) => t.id !== archivingTour.id));
+  }
+
+  async function onCopy() {
+    await Api.tours.copy(copyingTour.id);
+    setCopyingTour(null);
+    const response = await Api.tours.index(membership.TeamId, show, page);
+    setTours(response.data);
   }
 
   return (
@@ -132,8 +149,9 @@ function ToursList() {
               <table className="table table-striped table-hover">
                 <thead>
                   <tr>
-                    <th className="w-75">Name</th>
+                    <th>Name</th>
                     <th className="w-25">Created</th>
+                    <th className="w-5">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -141,11 +159,24 @@ function ToursList() {
                     <tr key={tour.id} onClick={() => navigate(tour.id)}>
                       <td className="align-middle">{tour.name}</td>
                       <td className="align-middle">{DateTime.fromISO(tour.createdAt).toLocaleString(DateTime.DATETIME_SHORT)}</td>
+                      <td className="align-middle text-center" onClick={(e) => e.stopPropagation()}>
+                        {membership?.role !== 'VIEWER' && (
+                          <Dropdown>
+                            <Dropdown.Toggle as="button" className="btn btn-sm btn-outline-secondary dropdown-toggle--hidden">
+                              <FontAwesomeIcon icon={faEllipsis} />
+                            </Dropdown.Toggle>
+                            <Dropdown.Menu>
+                              <Dropdown.Item onClick={() => setCopyingTour(tour)}>Copy</Dropdown.Item>
+                              {!tour.archivedAt && <Dropdown.Item onClick={() => setArchivingTour(tour)}>Archive</Dropdown.Item>}
+                            </Dropdown.Menu>
+                          </Dropdown>
+                        )}
+                      </td>
                     </tr>
                   ))}
                   {tours.length === 0 && (
                     <tr>
-                      <td colSpan={2}>No tours yet.</td>
+                      <td colSpan={3}>No tours yet.</td>
                     </tr>
                   )}
                 </tbody>
@@ -163,6 +194,17 @@ function ToursList() {
           </>
         )}
       </main>
+      {copyingTour && (
+        <ConfirmModal isShowing={true} title="Copy Tour" onCancel={() => setCopyingTour(null)} onOK={onCopy}>
+          Are you sure you want to make a copy of <strong>{copyingTour.name}</strong>? The copy will share the same Stops and Assets as the
+          original Tour.
+        </ConfirmModal>
+      )}
+      {archivingTour && (
+        <ConfirmModal isShowing={true} title="Archive Tour" onCancel={() => setArchivingTour(null)} onOK={onArchive}>
+          Are you sure you wish to archive this tour <b>{archivingTour.name}</b>?
+        </ConfirmModal>
+      )}
     </>
   );
 }
