@@ -412,6 +412,57 @@ router.get('/:id/export', interceptors.requireLogin, async (req, res) => {
   }
 });
 
+router.post('/:id/copy', interceptors.requireLogin, async (req, res) => {
+  const record = await models.Tour.findByPk(req.params.id, {
+    include: ['Team', { model: models.TourStop }],
+  });
+  if (!record) {
+    res.status(StatusCodes.NOT_FOUND).end();
+    return;
+  }
+  const membership = await record.Team.getMembership(req.user);
+  if (!membership || !membership.isEditor) {
+    res.status(StatusCodes.UNAUTHORIZED).end();
+    return;
+  }
+  let newTour;
+  await models.sequelize.transaction(async (transaction) => {
+    let link = `${record.link}-copy`;
+    let suffix = 1;
+    // eslint-disable-next-line no-await-in-loop
+    while (await models.Tour.findOne({ where: { TeamId: record.TeamId, link }, transaction })) {
+      link = `${record.link}-copy-${suffix++}`;
+    }
+    newTour = await models.Tour.create(
+      {
+        TeamId: record.TeamId,
+        name: record.name,
+        link,
+        names: record.names,
+        descriptions: record.descriptions,
+        variants: record.variants,
+        visibility: record.visibility,
+        CoverResourceId: record.CoverResourceId,
+        IntroStopId: record.IntroStopId,
+      },
+      { transaction }
+    );
+    for (const ts of record.TourStops) {
+      // eslint-disable-next-line no-await-in-loop
+      await models.TourStop.create(
+        {
+          TourId: newTour.id,
+          StopId: ts.StopId,
+          TransitionStopId: ts.TransitionStopId,
+          position: ts.position,
+        },
+        { transaction }
+      );
+    }
+  });
+  res.status(StatusCodes.CREATED).json(newTour.toJSON());
+});
+
 router.get('/:id', interceptors.requireLogin, async (req, res) => {
   const record = await models.Tour.findByPk(req.params.id, {
     include: [

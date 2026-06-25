@@ -622,4 +622,72 @@ describe('/api/tours', () => {
       assert.deepStrictEqual(response.body.link, 'tour2-1');
     });
   });
+
+  describe('POST /:id/copy', () => {
+    it('creates a shallow copy of a Tour with its TourStops', async () => {
+      const response = await testSession
+        .post('/api/tours/495b18a8-ae05-4f44-a06d-c1809add0352/copy')
+        .set('Accept', 'application/json')
+        .expect(StatusCodes.CREATED);
+
+      assert.ok(response.body.id);
+      assert.notStrictEqual(response.body.id, '495b18a8-ae05-4f44-a06d-c1809add0352');
+      assert.deepStrictEqual(response.body.link, 'tour2-copy');
+      assert.deepStrictEqual(response.body.name, 'Tour 2');
+      assert.deepStrictEqual(response.body.names, { 'en-us': 'Tour 2' });
+      assert.deepStrictEqual(response.body.descriptions, { 'en-us': 'Tour 2 description' });
+      assert.deepStrictEqual(response.body.variants, [{ name: 'English (US)', displayName: 'English', code: 'en-us' }]);
+      assert.deepStrictEqual(response.body.visibility, 'PRIVATE');
+      assert.deepStrictEqual(response.body.CoverResourceId, null);
+      assert.deepStrictEqual(response.body.IntroStopId, null);
+
+      const newTourStops = await models.TourStop.findAll({ where: { TourId: response.body.id }, order: [['position', 'ASC']] });
+      assert.deepStrictEqual(newTourStops.length, 2);
+      assert.deepStrictEqual(newTourStops[0].StopId, 'e39b97ad-a5e9-422c-b256-d50fec355285');
+      assert.deepStrictEqual(newTourStops[1].StopId, 'bba84716-633e-4593-85a0-9da4010eb99b');
+
+      const origTourStops = await models.TourStop.findAll({ where: { TourId: '495b18a8-ae05-4f44-a06d-c1809add0352' } });
+      assert.deepStrictEqual(origTourStops.length, 2);
+    });
+
+    it('resolves link conflicts when copying', async () => {
+      await models.Tour.create({
+        TeamId: '1a93d46d-89bf-463b-ab23-8f22f5777907',
+        name: 'Tour 2 Copy',
+        link: 'tour2-copy',
+        names: { 'en-us': 'Tour 2 Copy' },
+        descriptions: {},
+        variants: [{ name: 'English (US)', displayName: 'English', code: 'en-us' }],
+        visibility: 'PRIVATE',
+      });
+
+      const response = await testSession
+        .post('/api/tours/495b18a8-ae05-4f44-a06d-c1809add0352/copy')
+        .set('Accept', 'application/json')
+        .expect(StatusCodes.CREATED);
+
+      assert.deepStrictEqual(response.body.link, 'tour2-copy-1');
+    });
+
+    it('returns 404 for an unknown tour id', async () => {
+      await testSession
+        .post('/api/tours/00000000-0000-0000-0000-000000000000/copy')
+        .set('Accept', 'application/json')
+        .expect(StatusCodes.NOT_FOUND);
+    });
+
+    it('returns 401 for a non-member user', async () => {
+      const otherSession = session(app);
+      await otherSession
+        .post('/api/auth/login')
+        .set('Accept', 'application/json')
+        .send({ email: 'another.user@test.com', password: 'abcd1234' })
+        .expect(StatusCodes.OK);
+
+      await otherSession
+        .post('/api/tours/495b18a8-ae05-4f44-a06d-c1809add0352/copy')
+        .set('Accept', 'application/json')
+        .expect(StatusCodes.UNAUTHORIZED);
+    });
+  });
 });
