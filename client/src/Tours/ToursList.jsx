@@ -29,6 +29,7 @@ function ToursList() {
   const [isImporting, setIsImporting] = useState(false);
   const [importError, setImportError] = useState(null);
   const [copyingTour, setCopyingTour] = useState(null);
+  const [archivingTour, setArchivingTour] = useState(null);
   const importFileRef = useRef(null);
 
   useEffect(() => {
@@ -79,6 +80,12 @@ function ToursList() {
       setImportError(err?.response?.data?.message ?? 'Import failed. Please check the file and try again.');
       setIsImporting(false);
     }
+  }
+
+  async function onArchive() {
+    await Api.tours.archive(archivingTour.id);
+    setArchivingTour(null);
+    setTours(tours.filter((t) => t.id !== archivingTour.id));
   }
 
   async function onCopy() {
@@ -160,6 +167,7 @@ function ToursList() {
                             </Dropdown.Toggle>
                             <Dropdown.Menu>
                               <Dropdown.Item onClick={() => setCopyingTour(tour)}>Copy</Dropdown.Item>
+                              {!tour.archivedAt && <Dropdown.Item onClick={() => setArchivingTour(tour)}>Archive</Dropdown.Item>}
                             </Dropdown.Menu>
                           </Dropdown>
                         )}
@@ -189,6 +197,11 @@ function ToursList() {
       {copyingTour && (
         <ConfirmModal isShowing={true} title="Copy Tour" onCancel={() => setCopyingTour(null)} onOK={onCopy}>
           Are you sure you want to make a copy of <strong>{copyingTour.name}</strong>? The copy will share the same Stops and Assets as the original Tour.
+        </ConfirmModal>
+      )}
+      {archivingTour && (
+        <ConfirmModal isShowing={true} title="Archive Tour" onCancel={() => setArchivingTour(null)} onOK={onArchive}>
+          Are you sure you wish to archive this tour <b>{archivingTour.name}</b>?
         </ConfirmModal>
       )}
     </>
