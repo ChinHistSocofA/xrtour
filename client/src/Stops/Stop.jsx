@@ -184,7 +184,7 @@ function Stop({ StopId, transition, children }) {
   const isEditable = isEditor && !isArchived;
 
   const title = stop?.name ?? '';
-  const primaryVariant = tour?.variants[0] ?? stop?.variants[0];
+  const primaryVariant = stop?.variants[0];
 
   return (
     <>
@@ -234,7 +234,7 @@ function Stop({ StopId, transition, children }) {
                       <FormGroup plaintext name="destAddress" label="Destination Address" record={stop} />
                     </>
                   )}
-                  <VariantTabs variants={stop.variants} current={variant} setVariant={setVariant} />
+                  <VariantTabs variants={stop?.variants} current={variant} setVariant={setVariant} />
                   <FormGroup plaintext name="name" label="Display Name" value={stop.names[variant.code]} />
                   <FormGroup plaintext type="textarea" name="description" label="Description" value={stop.descriptions[variant.code]} />
                   <div className="d-flex justify-content-between mb-3">
@@ -289,6 +289,7 @@ function Stop({ StopId, transition, children }) {
                 <ResourcesTable
                   variant={variant}
                   fallbackVariant={primaryVariant}
+                  variants={stop?.variants}
                   resources={resources}
                   onClick={onClickResource}
                   onChange={onChangeResource}
@@ -323,12 +324,7 @@ function Stop({ StopId, transition, children }) {
           </>
         )}
         {isShowingResourcesModal && (
-          <ResourcesModal
-            isShowing={true}
-            onHide={onHideResourcesModal}
-            onSelect={onSelectResource}
-            variants={tour?.variants ?? stop?.variants}
-          />
+          <ResourcesModal isShowing={true} onHide={onHideResourcesModal} onSelect={onSelectResource} variants={stop?.variants} />
         )}
         {isConfirmArchiveShowing && (
           <ConfirmModal
