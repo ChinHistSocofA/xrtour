@@ -20,7 +20,7 @@ function getVariantFile(files, variant, fallbackVariant, variantSuffix = '') {
   return file;
 }
 
-function ResourcesTable({ variant, fallbackVariant, resources, onClick, onChange, onRemove, isEditable }) {
+function ResourcesTable({ variant, fallbackVariant, variants, resources, onClick, onChange, onRemove, isEditable }) {
   const [selectedResource, setSelectedResource] = useState();
   const [selectedResourceClone, setSelectedResourceClone] = useState();
   const [isEditing, setEditing] = useState(false);
@@ -224,6 +224,7 @@ function ResourcesTable({ variant, fallbackVariant, resources, onClick, onChange
             <ResourceForm
               ResourceId={selectedResource.Resource.id}
               type={selectedResource.Resource.type}
+              variants={variants}
               onCancel={() => setAssetShowing(false)}
               onUpdate={onUpdateAsset}
             />
@@ -241,6 +242,7 @@ ResourcesTable.propTypes = {
   fallbackVariant: PropTypes.shape({
     code: PropTypes.string.isRequired,
   }).isRequired,
+  variants: PropTypes.array,
   resources: PropTypes.arrayOf(
     PropTypes.shape({
       id: PropTypes.string.isRequired,

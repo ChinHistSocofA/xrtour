@@ -73,6 +73,13 @@ function ResourceForm({ ResourceId, type, onCancel, onCreate, onUpdate, variants
     if (ResourceId) {
       Api.resources.get(ResourceId).then((response) => {
         if (isCancelled) return;
+        if (variants) {
+          for (const variant of variants) {
+            if (!response.data.variants.find((v) => v.code === variant.code)) {
+              response.data.variants = [...response.data.variants, variant];
+            }
+          }
+        }
         setResource(response.data);
         setVariant(response.data.variants[0]);
       });
