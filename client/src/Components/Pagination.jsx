@@ -6,6 +6,40 @@ function Pagination({ page, lastPage, otherParams = {} }) {
   function onClick() {
     window.scrollTo(0, 0);
   }
+  let pages = [];
+  const firstPage = Math.max(1, page - 5);
+  if (firstPage > 1) {
+    pages.push(
+      <li className="page-item disabled">
+        <span className="page-link">&hellip;</span>
+      </li>
+    );
+  }
+  const lastVisiblePage = Math.min(lastPage, firstPage + 11);
+  for (let i = firstPage; i <= lastVisiblePage; i++) {
+    if (i === page) {
+      pages.push(
+        <li className="page-item active" aria-current="page">
+          <span className="page-link">{i}</span>
+        </li>
+      );
+    } else {
+      pages.push(
+        <li className="page-item">
+          <Link to={`?${new URLSearchParams({ ...otherParams, page: i })}`} onClick={onClick} className="page-link">
+            {i}
+          </Link>
+        </li>
+      );
+    }
+  }
+  if (lastVisiblePage < lastPage) {
+    pages.push(
+      <li className="page-item disabled">
+        <span className="page-link">&hellip;</span>
+      </li>
+    );
+  }
   return (
     <nav>
       <ul className="pagination justify-content-center">
@@ -22,61 +56,7 @@ function Pagination({ page, lastPage, otherParams = {} }) {
           )}
           {page === 1 && <span className="page-link">Prev</span>}
         </li>
-        {page > 1 && (
-          <li className="page-item">
-            <Link to={`?${new URLSearchParams(otherParams)}`} onClick={onClick} className="page-link">
-              1
-            </Link>
-          </li>
-        )}
-        {page - 3 >= 2 && (
-          <li className="page-item disabled">
-            <span className="page-link">&hellip;</span>
-          </li>
-        )}
-        {page === 4 && (
-          <li className="page-item">
-            <Link to={`?${new URLSearchParams({ ...otherParams, page: 2 })}`} onClick={onClick} className="page-link">
-              2
-            </Link>
-          </li>
-        )}
-        {page > 2 && (
-          <li className="page-item">
-            <Link to={`?${new URLSearchParams({ ...otherParams, page: page - 1 })}`} onClick={onClick} className="page-link">
-              {page - 1}
-            </Link>
-          </li>
-        )}
-        <li className="page-item active" aria-current="page">
-          <span className="page-link">{page}</span>
-        </li>
-        {page < lastPage && (
-          <li className="page-item">
-            <Link to={`?${new URLSearchParams({ ...otherParams, page: page + 1 })}`} onClick={onClick} className="page-link">
-              {page + 1}
-            </Link>
-          </li>
-        )}
-        {page + 2 === lastPage - 1 && (
-          <li className="page-item">
-            <Link to={`?${new URLSearchParams({ ...otherParams, page: page + 2 })}`} onClick={onClick} className="page-link">
-              {page + 2}
-            </Link>
-          </li>
-        )}
-        {lastPage - (page + 1) > 2 && (
-          <li className="page-item disabled">
-            <span className="page-link">&hellip;</span>
-          </li>
-        )}
-        {page < lastPage - 1 && (
-          <li className="page-item">
-            <Link to={`?${new URLSearchParams({ ...otherParams, page: lastPage })}`} onClick={onClick} className="page-link">
-              {lastPage}
-            </Link>
-          </li>
-        )}
+        {pages}
         <li className={classNames('page-item', { disabled: page === lastPage })}>
           {page < lastPage && (
             <Link to={`?${new URLSearchParams({ ...otherParams, page: page + 1 })}`} onClick={onClick} className="page-link">
