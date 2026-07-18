@@ -1,0 +1,47 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "Template to create an SES sending user account and corresponding access key",
+  "Parameters": {
+    "BaseName": {
+      "Description": "Base name of the deployment (snake-case, will be prepended to make internal reference names)",
+      "Type": "String",
+      "Default": "app"
+    }
+  },
+  "Resources": {
+    "SESUser": {
+      "Type": "AWS::IAM::User",
+      "Properties": {
+        "Policies": [
+          {
+            "PolicyName": {
+              "Fn::Sub": "${BaseName}-ses-policy"
+            },
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": "ses:SendRawEmail",
+                  "Resource": "*"
+                }
+              ]
+            }
+          }
+        ],
+        "UserName": {
+          "Fn::Sub": "${BaseName}-ses-user"
+        }
+      }
+    },
+    "SESUserAccessKey": {
+      "Type": "AWS::IAM::AccessKey",
+      "Properties": {
+        "Status": "Active",
+        "UserName": {
+          "Ref": "SESUser"
+        }
+      }
+    }
+  }
+}
