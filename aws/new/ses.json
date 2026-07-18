@@ -8,6 +8,30 @@
       "Default": "app"
     }
   },
+  "Outputs": {
+    "SESUserAccessKeyId": {
+      "Description": "Access Key ID for the user",
+      "Value": {
+        "Ref": "SESUserAccessKey"
+      },
+      "Export": {
+        "Name": {
+          "Fn::Sub": "${BaseName}-ses-user-access-key-id"
+        }
+      }
+    },
+    "SESUserSecretAccessKeyARN": {
+      "Description": "ARN for the Secrets Manager secret containing the Secret Access Key for the user",
+      "Value": {
+        "Ref": "SESUserSecretAccessKey"
+      },
+      "Export": {
+        "Name": {
+          "Fn::Sub": "${BaseName}-ses-user-secret-access-key-arn"
+        }
+      }
+    }
+  },
   "Resources": {
     "SESUser": {
       "Type": "AWS::IAM::User",
@@ -40,6 +64,20 @@
         "Status": "Active",
         "UserName": {
           "Ref": "SESUser"
+        }
+      }
+    },
+    "SESUserSecretAccessKey": {
+      "Type": "AWS::SecretsManager::Secret",
+      "Properties": {
+        "Name": {
+          "Fn::Sub": "/iam/user/${BaseName}-ses-user/secret-access-key"
+        },
+        "SecretString": {
+          "Fn::GetAtt": [
+            "SESUserAccessKey",
+            "SecretAccessKey"
+          ]
         }
       }
     }

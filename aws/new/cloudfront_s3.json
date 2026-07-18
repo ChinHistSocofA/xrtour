@@ -1,0 +1,404 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "Template to create a new S3 bucket and CloudFront distribution",
+  "Parameters": {
+    "BaseName": {
+      "Description": "Base name for the stack",
+      "Type": "String"
+    },
+    "CDNSigningPrivateKey": {
+      "Description": "The private key used for signing requests to CloudFront",
+      "Type": "String"
+    },
+    "CDNSigningPublicKey": {
+      "Description": "The public key used for signing requests to CloudFront",
+      "Type": "String"
+    },
+    "DomainName": {
+      "Description": "The domain name for accessing this application, to be used in requesting an SSL cert",
+      "Type": "String",
+      "Default": ""
+    }
+  },
+  "Outputs": {
+    "BucketName": {
+      "Description": "Name of the bucket",
+      "Value": {
+        "Ref": "Bucket"
+      },
+      "Export": {
+        "Name": {
+          "Fn::Sub": "${BaseName}-bucket"
+        }
+      }
+    },
+    "BucketUserAccessKeyId": {
+      "Description": "Access Key ID for the user",
+      "Value": {
+        "Ref": "BucketUserAccessKey"
+      },
+      "Export": {
+        "Name": {
+          "Fn::Sub": "${BaseName}-bucket-user-access-key-id"
+        }
+      }
+    },
+    "BucketUserSecretAccessKeyARN": {
+      "Description": "ARN for the Secrets Manager secret containing the Secret Access Key for the user",
+      "Value": {
+        "Ref": "BucketUserSecretAccessKey"
+      },
+      "Export": {
+        "Name": {
+          "Fn::Sub": "${BaseName}-bucket-user-secret-access-key-arn"
+        }
+      }
+    }
+  },
+  "Resources": {
+    "BucketUser": {
+      "Type": "AWS::IAM::User",
+      "Properties": {
+        "Policies": [
+          {
+            "PolicyName": {
+              "Fn::Sub": "${BaseName}-bucket-policy"
+            },
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Sid": "VisualEditor0",
+                  "Effect": "Allow",
+                  "Action": [
+                    "s3:PutObject",
+                    "s3:GetObject",
+                    "s3:ListBucket",
+                    "s3:DeleteObject"
+                  ],
+                  "Resource": [
+                    {
+                      "Fn::Join": [
+                        "",
+                        [
+                          "arn:aws:s3:::",
+                          {
+                            "Ref": "Bucket"
+                          },
+                          "/*"
+                        ]
+                      ]
+                    },
+                    {
+                      "Fn::Join": [
+                        "",
+                        [
+                          "arn:aws:s3:::",
+                          {
+                            "Ref": "Bucket"
+                          }
+                        ]
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ],
+        "UserName": {
+          "Fn::Sub": "${BaseName}-bucket-user"
+        }
+      }
+    },
+    "BucketUserAccessKey": {
+      "Type": "AWS::IAM::AccessKey",
+      "Properties": {
+        "Status": "Active",
+        "UserName": {
+          "Ref": "BucketUser"
+        }
+      }
+    },
+    "BucketUserSecretAccessKey": {
+      "Type": "AWS::SecretsManager::Secret",
+      "Properties": {
+        "Name": {
+          "Fn::Sub": "/iam/user/${BaseName}-bucket-user/secret-access-key"
+        },
+        "SecretString": {
+          "Fn::GetAtt": [
+            "BucketUserAccessKey",
+            "SecretAccessKey"
+          ]
+        }
+      }
+    },
+    "Bucket": {
+      "Type": "AWS::S3::Bucket",
+      "Properties": {
+        "CorsConfiguration": {
+          "CorsRules": [
+            {
+              "AllowedHeaders": [
+                "*"
+              ],
+              "AllowedMethods": [
+                "GET",
+                "PUT"
+              ],
+              "AllowedOrigins": [
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "https://",
+                      {
+                        "Ref": "DomainName"
+                      }
+                    ]
+                  ]
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "https://*.",
+                      {
+                        "Ref": "DomainName"
+                      }
+                    ]
+                  ]
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "https://*.staging",
+                      {
+                        "Ref": "DomainName"
+                      }
+                    ]
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "LifecycleConfiguration": {
+          "Rules": [
+            {
+              "Id": "DeleteOrphanUploadsRule",
+              "Prefix": "uploads/",
+              "Status": "Enabled",
+              "ExpirationInDays": 1
+            }
+          ]
+        },
+        "OwnershipControls": {
+          "Rules": [
+            {
+              "ObjectOwnership": "BucketOwnerEnforced"
+            }
+          ]
+        },
+        "PublicAccessBlockConfiguration": {
+          "BlockPublicAcls": "TRUE",
+          "BlockPublicPolicy": "TRUE",
+          "IgnorePublicAcls": "TRUE",
+          "RestrictPublicBuckets": "TRUE"
+        }
+      },
+      "DeletionPolicy": "Delete"
+    },
+    "BucketPolicy": {
+      "Type": "AWS::S3::BucketPolicy",
+      "Properties": {
+        "Bucket": {
+          "Ref": "Bucket"
+        },
+        "PolicyDocument": {
+          "Version": "2008-10-17",
+          "Id": "PolicyForCloudFrontPrivateContent",
+          "Statement": [
+            {
+              "Sid": "AllowCloudFrontServicePrincipal",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "cloudfront.amazonaws.com"
+              },
+              "Action": "s3:GetObject",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    {
+                      "Fn::GetAtt": [
+                        "Bucket",
+                        "Arn"
+                      ]
+                    },
+                    "/*"
+                  ]
+                ]
+              },
+              "Condition": {
+                "StringEquals": {
+                  "AWS:SourceArn": {
+                    "Fn::Join": [
+                      "",
+                      [
+                        "arn:aws:cloudfront::",
+                        {
+                          "Ref": "AWS::AccountId"
+                        },
+                        ":distribution/",
+                        {
+                          "Ref": "CDN"
+                        }
+                      ]
+                    ]
+                  }
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "CDN": {
+      "Type": "AWS::CloudFront::Distribution",
+      "Properties": {
+        "DistributionConfig": {
+          "DefaultCacheBehavior": {
+            "AllowedMethods": [
+              "GET",
+              "HEAD",
+              "OPTIONS",
+              "PUT",
+              "PATCH",
+              "POST",
+              "DELETE"
+            ],
+            "CachedMethods": [
+              "GET",
+              "HEAD"
+            ],
+            "CachePolicyId": {
+              "Ref": "CDNCachePolicy"
+            },
+            "Compress": "true",
+            "OriginRequestPolicyId": "88a5eaf4-2fd4-4709-b370-b4c650ea3fcf",
+            "ResponseHeadersPolicyId": "eaab4381-ed33-4a86-88ca-d9558dc6cd63",
+            "TargetOriginId": {
+              "Fn::Sub": "${BaseName}-cf-bucket-origin"
+            },
+            "TrustedKeyGroups": [
+              {
+                "Ref": "CDNKeyGroup"
+              }
+            ],
+            "ViewerProtocolPolicy": "redirect-to-https"
+          },
+          "Enabled": "true",
+          "HttpVersion": "http2",
+          "IPV6Enabled": "true",
+          "Origins": [
+            {
+              "DomainName": {
+                "Fn::GetAtt": [
+                  "Bucket",
+                  "RegionalDomainName"
+                ]
+              },
+              "Id": {
+                "Fn::Sub": "${BaseName}-cf-bucket-origin"
+              },
+              "OriginAccessControlId": {
+                "Fn::GetAtt": [
+                  "CDNOriginAccessControl",
+                  "Id"
+                ]
+              },
+              "S3OriginConfig": {
+                "OriginAccessIdentity": ""
+              }
+            }
+          ],
+          "PriceClass": "PriceClass_All"
+        }
+      }
+    },
+    "CDNCachePolicy": {
+      "Type": "AWS::CloudFront::CachePolicy",
+      "Properties": {
+        "CachePolicyConfig": {
+          "Comment": "Policy with caching enabled. Supports Gzip and Brotli compression.",
+          "DefaultTTL": 86400,
+          "MaxTTL": 31536000,
+          "MinTTL": 1,
+          "Name": {
+            "Fn::Sub": "${BaseName}-cf-cache-policy"
+          },
+          "ParametersInCacheKeyAndForwardedToOrigin": {
+            "CookiesConfig": {
+              "CookieBehavior": "none"
+            },
+            "EnableAcceptEncodingBrotli": "true",
+            "EnableAcceptEncodingGzip": "true",
+            "HeadersConfig": {
+              "HeaderBehavior": "none"
+            },
+            "QueryStringsConfig": {
+              "QueryStringBehavior": "none"
+            }
+          }
+        }
+      }
+    },
+    "CDNKeyGroup": {
+      "Type": "AWS::CloudFront::KeyGroup",
+      "Properties": {
+        "KeyGroupConfig": {
+          "Items": [
+            {
+              "Ref": "CDNPublicKey"
+            }
+          ],
+          "Name": {
+            "Fn::Sub": "${BaseName}-cf-key-group"
+          }
+        }
+      }
+    },
+    "CDNOriginAccessControl": {
+      "Type": "AWS::CloudFront::OriginAccessControl",
+      "Properties": {
+        "OriginAccessControlConfig": {
+          "Name": {
+            "Fn::Sub": "${BaseName}-cf-bucket-origin-access-control"
+          },
+          "OriginAccessControlOriginType": "s3",
+          "SigningBehavior": "always",
+          "SigningProtocol": "sigv4"
+        }
+      }
+    },
+    "CDNPublicKey": {
+      "Type": "AWS::CloudFront::PublicKey",
+      "Properties": {
+        "PublicKeyConfig": {
+          "CallerReference": {
+            "Fn::Sub": "${BaseName}-cf-public-key-caller-reference"
+          },
+          "EncodedKey": {
+            "Ref": "CDNSigningPublicKey"
+          },
+          "Name": {
+            "Fn::Sub": "${BaseName}-cf-public-key"
+          }
+        }
+      }
+    }
+  }
+}
