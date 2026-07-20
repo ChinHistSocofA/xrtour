@@ -1,0 +1,177 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "EC2 instance with Dokku, Postgres, and LetsEncrypt installed",
+  "Outputs": {
+    "PublicDnsName": {
+      "Description": "Public DNS name of the instance",
+      "Value": {
+        "Fn::GetAtt": [
+          "Instance",
+          "PublicDnsName"
+        ]
+      }
+    },
+    "PublicIP": {
+      "Description": "Public IP address of the instance",
+      "Value": {
+        "Fn::GetAtt": [
+          "Instance",
+          "PublicIp"
+        ]
+      }
+    }
+  },
+  "Parameters": {
+    "ApplicationName": {
+      "Description": "Name of the application being set up",
+      "Type": "String"
+    },
+    "DokkuHostname": {
+      "Description": "The domain name for accessing this application",
+      "Type": "String"
+    },
+    "DokkuVersion": {
+      "Default": "v0.38.24",
+      "Description": "Dokku version to install, e.g., \"v0.36.0\" (see https://github.com/dokku/dokku/releases).",
+      "Type": "String"
+    },
+    "InstanceImageId": {
+      "Description": "The AMI ID for the application server instance",
+      "Type": "String"
+    },
+    "InstanceRootVolumeSize": {
+      "Default": "48",
+      "Description": "The size of the root volume (in GB).",
+      "Type": "Number"
+    },
+    "InstanceType": {
+      "AllowedValues": [
+        "t4g.small",
+        "t4g.medium",
+        "t4g.large"
+      ],
+      "Default": "t4g.medium",
+      "Description": "The application server instance type",
+      "Type": "String"
+    },
+    "LetsEncryptEmail": {
+      "Description": "Email address to use with LetsEncrypt, to receive notifications of SSL cert renewals, etc",
+      "Type": "String"
+    }
+  },
+  "Resources": {
+    "Instance": {
+      "Properties": {
+        "BlockDeviceMappings": [
+          {
+            "DeviceName": "/dev/xvda",
+            "Ebs": {
+              "VolumeSize": {
+                "Ref": "InstanceRootVolumeSize"
+              }
+            }
+          }
+        ],
+        "IamInstanceProfile": {
+          "Ref": "InstanceProfile"
+        },
+        "ImageId": {
+          "Ref": "InstanceImageId"
+        },
+        "InstanceType": {
+          "Ref": "InstanceType"
+        },
+        "KeyName": {
+          "Ref": "KeyPair"
+        },
+        "SecurityGroups": [
+          {
+            "Ref": "InstanceSecurityGroup"
+          }
+        ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": {
+              "Ref": "AWS::StackName"
+            }
+          }
+        ],
+        "UserData": {
+          "Fn::Base64": {
+            "Fn::Join": [
+              "",
+              [
+                "#!/bin/bash\n",
+                "sudo apt-get update -y\n",
+                "sudo apt-get install -y cron\n",
+                "wget -NP . https://dokku.com/install/",
+                {
+                  "Ref": "DokkuVersion"
+                },
+                "/bootstrap.sh\n",
+                "sudo DOKKU_TAG=",
+                {
+                  "Ref": "DokkuVersion"
+                },
+                " bash bootstrap.sh\n",
+                "dokku domains:set-global ",
+                {
+                  "Ref": "DokkuHostname"
+                },
+                "\n",
+                "dokku builder:set --global selected dockerfile\n",
+                "sudo dokku plugin:install https://github.com/dokku/dokku-postgres.git\n",
+                "sudo dokku plugin:install https://github.com/dokku/dokku-letsencrypt.git\n",
+                "dokku letsencrypt:set --global email ",
+                {
+                  "Ref": "LetsEncryptEmail"
+                },
+                "\n",
+                "dokku letsencrypt:cron-job --add\n"
+              ]
+            ]
+          }
+        }
+      },
+      "Type": "AWS::EC2::Instance"
+    },
+    "InstanceSecurityGroup": {
+      "Properties": {
+        "GroupDescription": "Allow http/https/ssh traffic",
+        "GroupName": {
+          "Fn::Sub": "${ApplicationName}-dokku-ec2-sg"
+        },
+        "SecurityGroupIngress": [
+          {
+            "CidrIp": "0.0.0.0/0",
+            "FromPort": 80,
+            "IpProtocol": "tcp",
+            "ToPort": 80
+          },
+          {
+            "CidrIp": "0.0.0.0/0",
+            "FromPort": 443,
+            "IpProtocol": "tcp",
+            "ToPort": 443
+          },
+          {
+            "CidrIp": "0.0.0.0/0",
+            "FromPort": 22,
+            "IpProtocol": "tcp",
+            "ToPort": 22
+          }
+        ]
+      },
+      "Type": "AWS::EC2::SecurityGroup"
+    },
+    "KeyPair": {
+      "Properties": {
+        "KeyName": {
+          "Fn::Sub": "${ApplicationName}-dokku-key-pair"
+        }
+      },
+      "Type": "AWS::EC2::KeyPair"
+    }
+  }
+}
