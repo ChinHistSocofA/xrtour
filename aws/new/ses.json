@@ -30,9 +30,119 @@
           "Fn::Sub": "${BaseName}-ses-user-secret-access-key-arn"
         }
       }
+    },
+    "DkimDNSTokenName1": {
+      "Description": "DNS token name for DKIM 1",
+      "Value": {
+        "Fn::GetAtt": [
+          "SESEmailIdentity",
+          "DkimDNSTokenName1"
+        ]
+      },
+      "Export": {
+        "Name": {
+          "Fn::Sub": "${BaseName}-dkim-dns-token-name-1"
+        }
+      }
+    },
+    "DkimDNSTokenName2": {
+      "Description": "DNS token name for DKIM 2",
+      "Value": {
+        "Fn::GetAtt": [
+          "SESEmailIdentity",
+          "DkimDNSTokenName2"
+        ]
+      },
+      "Export": {
+        "Name": {
+          "Fn::Sub": "${BaseName}-dkim-dns-token-name-2"
+        }
+      }
+    },
+    "DkimDNSTokenName3": {
+      "Description": "DNS token name for DKIM 3",
+      "Value": {
+        "Fn::GetAtt": [
+          "SESEmailIdentity",
+          "DkimDNSTokenName3"
+        ]
+      },
+      "Export": {
+        "Name": {
+          "Fn::Sub": "${BaseName}-dkim-dns-token-name-3"
+        }
+      }
+    },
+    "DkimDNSTokenValue1": {
+      "Description": "DNS token value for DKIM 1",
+      "Value": {
+        "Fn::GetAtt": [
+          "SESEmailIdentity",
+          "DkimDNSTokenValue1"
+        ]
+      },
+      "Export": {
+        "Name": {
+          "Fn::Sub": "${BaseName}-dkim-dns-token-value-1"
+        }
+      }
+    },
+    "DkimDNSTokenValue2": {
+      "Description": "DNS token value for DKIM 2",
+      "Value": {
+        "Fn::GetAtt": [
+          "SESEmailIdentity",
+          "DkimDNSTokenValue2"
+        ]
+      },
+      "Export": {
+        "Name": {
+          "Fn::Sub": "${BaseName}-dkim-dns-token-value-2"
+        }
+      }
+    },
+    "DkimDNSTokenValue3": {
+      "Description": "DNS token value for DKIM 3",
+      "Value": {
+        "Fn::GetAtt": [
+          "SESEmailIdentity",
+          "DkimDNSTokenValue3"
+        ]
+      },
+      "Export": {
+        "Name": {
+          "Fn::Sub": "${BaseName}-dkim-dns-token-value-3"
+        }
+      }
     }
   },
   "Resources": {
+    "SESEmailIdentity": {
+      "Type": "AWS::SES::EmailIdentity",
+      "Properties": {
+        "EmailIdentity": {
+          "Fn::ImportValue": {
+            "Fn::Sub": "${BaseName}-domain"
+          }
+        },
+        "MailFromAttributes": {
+          "BehaviorOnMxFailure": "USE_DEFAULT_VALUE",
+          "MailFromDomain": {
+            "Fn::Join": [
+              ".",
+              [
+                "ses",
+                {
+                  "Fn::ImportValue": {
+                    "Fn::Sub": "${BaseName}-domain"
+                  }
+                }
+              ]
+            ]
+          }
+        }
+      }
+    },
     "SESUser": {
       "Type": "AWS::IAM::User",
       "Properties": {

@@ -5,6 +5,10 @@
     "BaseName": {
       "Description": "Base name for the stack",
       "Type": "String"
+    },
+    "Domain": {
+      "Description": "Base domain name for the deployment",
+      "Type": "String"
     }
   },
   "Outputs": {
@@ -88,6 +92,17 @@
       "Export": {
         "Name": {
           "Fn::Sub": "${BaseName}-elastic-ip-0-public-ip"
+        }
+      }
+    },
+    "Domain": {
+      "Description": "The original domain name specified in the parameters",
+      "Value": {
+        "Ref": "Domain"
+      },
+      "Export": {
+        "Name": {
+          "Fn::Sub": "${BaseName}-domain"
         }
       }
     }
