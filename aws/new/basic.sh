@@ -56,3 +56,17 @@ if ! aws cloudformation describe-stacks --stack-name ${BASE_NAME}-ses >/dev/null
       exit 1
   fi
 fi
+
+# check if cdn stack created
+if ! aws cloudformation describe-stacks --stack-name ${BASE_NAME}-cdn >/dev/null 2>&1; then
+  # create the key pair for CDN signing
+  openssl genrsa -out private_key.pem 2048
+  openssl rsa -pubout -in private_key.pem -out public_key.pem
+  PUBLIC_KEY=`cat public_key.pem`
+  PRIVATE_KEY=`cat private_key.pem`
+  PRIVATE_KEY=${PRIVATE_KEY//
+/"\\n"}
+  # create the stack
+  echo "Creating ${BASE_NAME}-cdn stack"
+  aws cloudformation create-stack --capabilities CAPABILITY_NAMED_IAM --stack-name ${BASE_NAME}-cdn --template-body file://./cdn.json --parameters ParameterKey=BaseName,ParameterValue=$BASE_NAME ParameterKey=CDNSigningPrivateKey,ParameterValue="$PRIVATE_KEY" ParameterKey=CDNSigningPublicKey,ParameterValue="$PUBLIC_KEY"
+fi

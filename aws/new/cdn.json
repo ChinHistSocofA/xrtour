@@ -13,11 +13,6 @@
     "CDNSigningPublicKey": {
       "Description": "The public key used for signing requests to CloudFront",
       "Type": "String"
-    },
-    "DomainName": {
-      "Description": "The domain name for accessing this application, to be used in requesting an SSL cert",
-      "Type": "String",
-      "Default": ""
     }
   },
   "Outputs": {
@@ -51,6 +46,31 @@
       "Export": {
         "Name": {
           "Fn::Sub": "${BaseName}-bucket-user-secret-access-key-arn"
+        }
+      }
+    },
+    "CDNSigningKeyPairId": {
+      "Description": "Keypair ID for the CloudFront signing key",
+      "Value": {
+        "Fn::GetAtt": [
+          "CDNPublicKey",
+          "Id"
+        ]
+      },
+      "Export": {
+        "Name": {
+          "Fn::Sub": "${BaseName}-cdn-signing-keypair-id"
+        }
+      }
+    },
+    "CDNSigningPrivateKeyARN": {
+      "Description": "ARN for the Secrets Manager secret containing the private key for CloudFront signing",
+      "Value": {
+        "Ref": "CDNSigningPrivateKey"
+      },
+      "Export": {
+        "Name": {
+          "Fn::Sub": "${BaseName}-cloudfront-signing-private-key-arn"
         }
       }
     }
@@ -154,7 +174,9 @@
                     [
                       "https://",
                       {
-                        "Ref": "DomainName"
+                        "Fn::ImportValue": {
+                          "Fn::Sub": "${BaseName}-domain"
+                        }
                       }
                     ]
                   ]
@@ -165,7 +187,9 @@
                     [
                       "https://*.",
                       {
-                        "Ref": "DomainName"
+                        "Fn::ImportValue": {
+                          "Fn::Sub": "${BaseName}-domain"
+                        }
                       }
                     ]
                   ]
@@ -176,7 +200,9 @@
                     [
                       "https://*.staging",
                       {
-                        "Ref": "DomainName"
+                        "Fn::ImportValue": {
+                          "Fn::Sub": "${BaseName}-domain"
+                        }
                       }
                     ]
                   ]
@@ -397,6 +423,17 @@
           "Name": {
             "Fn::Sub": "${BaseName}-cf-public-key"
           }
+        }
+      }
+    },
+    "CDNSigningPrivateKey": {
+      "Type": "AWS::SecretsManager::Secret",
+      "Properties": {
+        "Name": {
+          "Fn::Sub": "/cloudfront/${BaseName}-signing-private-key"
+        },
+        "SecretString": {
+          "Ref": "CDNSigningPrivateKey"
         }
       }
     }
