@@ -1,8 +1,8 @@
 #!/bin/bash
 
-read -p "Stack base name (lowercase, letters, numbers, hyphen only): [$1]" BASE_NAME
+read -p "Stack base name (lowercase, letters, numbers, hyphen only): [$1] " BASE_NAME
 BASE_NAME=${BASE_NAME:-$1}
-read -p "Domain to configure: [$2]" DOMAIN
+read -p "Domain to configure: [$2] " DOMAIN
 DOMAIN=${DOMAIN:-$2}
 
 REGION=`aws configure get region`
@@ -69,4 +69,11 @@ if ! aws cloudformation describe-stacks --stack-name ${BASE_NAME}-cdn >/dev/null
   # create the stack
   echo "Creating ${BASE_NAME}-cdn stack"
   aws cloudformation create-stack --capabilities CAPABILITY_NAMED_IAM --stack-name ${BASE_NAME}-cdn --template-body file://./cdn.json --parameters ParameterKey=BaseName,ParameterValue=$BASE_NAME ParameterKey=CDNSigningPrivateKey,ParameterValue="$PRIVATE_KEY" ParameterKey=CDNSigningPublicKey,ParameterValue="$PUBLIC_KEY"
+fi
+
+# check if rds stack created
+if ! aws cloudformation describe-stacks --stack-name ${BASE_NAME}-rds >/dev/null 2>&1; then
+  # create the stack
+  echo "Creating ${BASE_NAME}-rds stack"
+  aws cloudformation create-stack --capabilities CAPABILITY_NAMED_IAM --stack-name ${BASE_NAME}-rds --template-body file://./basic/rds.json --parameters ParameterKey=BaseName,ParameterValue=$BASE_NAME
 fi

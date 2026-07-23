@@ -9,7 +9,7 @@
     "DBInstanceType": {
       "Description": "The DB instance type",
       "Type": "String",
-      "Default": "db.t4g.micro",
+      "Default": "db.t4g.small",
       "AllowedValues": ["db.t4g.micro", "db.t4g.small", "db.t4g.medium", "db.t4g.large"]
     }
   },
@@ -132,17 +132,13 @@
         "DBInstanceIdentifier": {
           "Fn::Sub": "${BaseName}-db"
         },
-        "DBName": {
-          "Ref": "BaseName"
-        },
+        "DBName": "xrtour",
         "DBSubnetGroupName": {
           "Ref": "DatabaseSubnetGroup"
         },
         "Engine": "postgres",
         "EngineVersion": "17.6",
-        "MasterUsername": {
-          "Ref": "BaseName"
-        },
+        "MasterUsername": "xrtour",
         "MasterUserPassword": {
           "Fn::Join": [
             "",
