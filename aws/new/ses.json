@@ -34,10 +34,7 @@
     "DkimDNSTokenName1": {
       "Description": "DNS token name for DKIM 1",
       "Value": {
-        "Fn::GetAtt": [
-          "SESEmailIdentity",
-          "DkimDNSTokenName1"
-        ]
+        "Fn::GetAtt": ["SESEmailIdentity", "DkimDNSTokenName1"]
       },
       "Export": {
         "Name": {
@@ -48,10 +45,7 @@
     "DkimDNSTokenName2": {
       "Description": "DNS token name for DKIM 2",
       "Value": {
-        "Fn::GetAtt": [
-          "SESEmailIdentity",
-          "DkimDNSTokenName2"
-        ]
+        "Fn::GetAtt": ["SESEmailIdentity", "DkimDNSTokenName2"]
       },
       "Export": {
         "Name": {
@@ -62,10 +56,7 @@
     "DkimDNSTokenName3": {
       "Description": "DNS token name for DKIM 3",
       "Value": {
-        "Fn::GetAtt": [
-          "SESEmailIdentity",
-          "DkimDNSTokenName3"
-        ]
+        "Fn::GetAtt": ["SESEmailIdentity", "DkimDNSTokenName3"]
       },
       "Export": {
         "Name": {
@@ -76,10 +67,7 @@
     "DkimDNSTokenValue1": {
       "Description": "DNS token value for DKIM 1",
       "Value": {
-        "Fn::GetAtt": [
-          "SESEmailIdentity",
-          "DkimDNSTokenValue1"
-        ]
+        "Fn::GetAtt": ["SESEmailIdentity", "DkimDNSTokenValue1"]
       },
       "Export": {
         "Name": {
@@ -90,10 +78,7 @@
     "DkimDNSTokenValue2": {
       "Description": "DNS token value for DKIM 2",
       "Value": {
-        "Fn::GetAtt": [
-          "SESEmailIdentity",
-          "DkimDNSTokenValue2"
-        ]
+        "Fn::GetAtt": ["SESEmailIdentity", "DkimDNSTokenValue2"]
       },
       "Export": {
         "Name": {
@@ -104,10 +89,7 @@
     "DkimDNSTokenValue3": {
       "Description": "DNS token value for DKIM 3",
       "Value": {
-        "Fn::GetAtt": [
-          "SESEmailIdentity",
-          "DkimDNSTokenValue3"
-        ]
+        "Fn::GetAtt": ["SESEmailIdentity", "DkimDNSTokenValue3"]
       },
       "Export": {
         "Name": {
@@ -184,10 +166,7 @@
           "Fn::Sub": "/iam/user/${BaseName}-ses-user/secret-access-key"
         },
         "SecretString": {
-          "Fn::GetAtt": [
-            "SESUserAccessKey",
-            "SecretAccessKey"
-          ]
+          "Fn::GetAtt": ["SESUserAccessKey", "SecretAccessKey"]
         }
       }
     }

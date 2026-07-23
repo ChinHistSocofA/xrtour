@@ -52,10 +52,7 @@
     "CDNSigningKeyPairId": {
       "Description": "Keypair ID for the CloudFront signing key",
       "Value": {
-        "Fn::GetAtt": [
-          "CDNPublicKey",
-          "Id"
-        ]
+        "Fn::GetAtt": ["CDNPublicKey", "Id"]
       },
       "Export": {
         "Name": {
@@ -66,7 +63,7 @@
     "CDNSigningPrivateKeyARN": {
       "Description": "ARN for the Secrets Manager secret containing the private key for CloudFront signing",
       "Value": {
-        "Ref": "CDNSigningPrivateKey"
+        "Ref": "CDNSigningPrivateKeySecret"
       },
       "Export": {
         "Name": {
@@ -90,12 +87,7 @@
                 {
                   "Sid": "VisualEditor0",
                   "Effect": "Allow",
-                  "Action": [
-                    "s3:PutObject",
-                    "s3:GetObject",
-                    "s3:ListBucket",
-                    "s3:DeleteObject"
-                  ],
+                  "Action": ["s3:PutObject", "s3:GetObject", "s3:ListBucket", "s3:DeleteObject"],
                   "Resource": [
                     {
                       "Fn::Join": [
@@ -147,10 +139,7 @@
           "Fn::Sub": "/iam/user/${BaseName}-bucket-user/secret-access-key"
         },
         "SecretString": {
-          "Fn::GetAtt": [
-            "BucketUserAccessKey",
-            "SecretAccessKey"
-          ]
+          "Fn::GetAtt": ["BucketUserAccessKey", "SecretAccessKey"]
         }
       }
     },
@@ -160,13 +149,8 @@
         "CorsConfiguration": {
           "CorsRules": [
             {
-              "AllowedHeaders": [
-                "*"
-              ],
-              "AllowedMethods": [
-                "GET",
-                "PUT"
-              ],
+              "AllowedHeaders": ["*"],
+              "AllowedMethods": ["GET", "PUT"],
               "AllowedOrigins": [
                 {
                   "Fn::Join": [
@@ -259,10 +243,7 @@
                   "",
                   [
                     {
-                      "Fn::GetAtt": [
-                        "Bucket",
-                        "Arn"
-                      ]
+                      "Fn::GetAtt": ["Bucket", "Arn"]
                     },
                     "/*"
                   ]
@@ -297,19 +278,8 @@
       "Properties": {
         "DistributionConfig": {
           "DefaultCacheBehavior": {
-            "AllowedMethods": [
-              "GET",
-              "HEAD",
-              "OPTIONS",
-              "PUT",
-              "PATCH",
-              "POST",
-              "DELETE"
-            ],
-            "CachedMethods": [
-              "GET",
-              "HEAD"
-            ],
+            "AllowedMethods": ["GET", "HEAD", "OPTIONS", "PUT", "PATCH", "POST", "DELETE"],
+            "CachedMethods": ["GET", "HEAD"],
             "CachePolicyId": {
               "Ref": "CDNCachePolicy"
             },
@@ -332,19 +302,13 @@
           "Origins": [
             {
               "DomainName": {
-                "Fn::GetAtt": [
-                  "Bucket",
-                  "RegionalDomainName"
-                ]
+                "Fn::GetAtt": ["Bucket", "RegionalDomainName"]
               },
               "Id": {
                 "Fn::Sub": "${BaseName}-cf-bucket-origin"
               },
               "OriginAccessControlId": {
-                "Fn::GetAtt": [
-                  "CDNOriginAccessControl",
-                  "Id"
-                ]
+                "Fn::GetAtt": ["CDNOriginAccessControl", "Id"]
               },
               "S3OriginConfig": {
                 "OriginAccessIdentity": ""
@@ -426,7 +390,7 @@
         }
       }
     },
-    "CDNSigningPrivateKey": {
+    "CDNSigningPrivateKeySecret": {
       "Type": "AWS::SecretsManager::Secret",
       "Properties": {
         "Name": {

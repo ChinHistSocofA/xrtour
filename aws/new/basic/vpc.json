@@ -70,10 +70,7 @@
     "ElasticIP0AllocationId": {
       "Description": "Elastic IP 0 allocation ID",
       "Value": {
-        "Fn::GetAtt": [
-          "ElasticIP0",
-          "AllocationId"
-        ]
+        "Fn::GetAtt": ["ElasticIP0", "AllocationId"]
       },
       "Export": {
         "Name": {
@@ -84,10 +81,7 @@
     "ElasticIP0PublicIP": {
       "Description": "Public IP address of the Elastic IP 0",
       "Value": {
-        "Fn::GetAtt": [
-          "ElasticIP0",
-          "PublicIp"
-        ]
+        "Fn::GetAtt": ["ElasticIP0", "PublicIp"]
       },
       "Export": {
         "Name": {

@@ -5,19 +5,13 @@
     "PublicDnsName": {
       "Description": "Public DNS name of the instance",
       "Value": {
-        "Fn::GetAtt": [
-          "Instance",
-          "PublicDnsName"
-        ]
+        "Fn::GetAtt": ["Instance", "PublicDnsName"]
       }
     },
     "PublicIP": {
       "Description": "Public IP address of the instance",
       "Value": {
-        "Fn::GetAtt": [
-          "Instance",
-          "PublicIp"
-        ]
+        "Fn::GetAtt": ["Instance", "PublicIp"]
       }
     }
   },
@@ -45,11 +39,7 @@
       "Type": "Number"
     },
     "InstanceType": {
-      "AllowedValues": [
-        "t4g.small",
-        "t4g.medium",
-        "t4g.large"
-      ],
+      "AllowedValues": ["t4g.small", "t4g.medium", "t4g.large"],
       "Default": "t4g.medium",
       "Description": "The application server instance type",
       "Type": "String"
