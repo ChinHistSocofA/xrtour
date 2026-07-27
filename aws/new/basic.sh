@@ -1,11 +1,13 @@
 #!/bin/bash
 
+REGION=`aws configure get region`
 read -p "Stack base name (lowercase, letters, numbers, hyphen only): [$1] " BASE_NAME
 BASE_NAME=${BASE_NAME:-$1}
-read -p "Domain to configure: [$2] " DOMAIN
-DOMAIN=${DOMAIN:-$2}
-
-REGION=`aws configure get region`
+read -p "Environment [$2]: " ENVIRONMENT
+ENVIRONMENT=${ENVIRONMENT:-$2}
+set -a
+source ./.env.$ENVIRONMENT
+set +a
 
 # check if vpc stack created
 if ! aws cloudformation describe-stacks --stack-name ${BASE_NAME}-vpc >/dev/null 2>&1; then
@@ -69,6 +71,8 @@ if ! aws cloudformation describe-stacks --stack-name ${BASE_NAME}-cdn >/dev/null
   # create the stack
   echo "Creating ${BASE_NAME}-cdn stack"
   aws cloudformation create-stack --capabilities CAPABILITY_NAMED_IAM --stack-name ${BASE_NAME}-cdn --template-body file://./cdn.json --parameters ParameterKey=BaseName,ParameterValue=$BASE_NAME ParameterKey=CDNSigningPrivateKey,ParameterValue="$PRIVATE_KEY" ParameterKey=CDNSigningPublicKey,ParameterValue="$PUBLIC_KEY"
+  # wait for completion
+  aws cloudformation wait stack-create-complete --stack-name ${BASE_NAME}-cdn --output text
 fi
 
 # check if rds stack created
@@ -76,4 +80,20 @@ if ! aws cloudformation describe-stacks --stack-name ${BASE_NAME}-rds >/dev/null
   # create the stack
   echo "Creating ${BASE_NAME}-rds stack"
   aws cloudformation create-stack --capabilities CAPABILITY_NAMED_IAM --stack-name ${BASE_NAME}-rds --template-body file://./basic/rds.json --parameters ParameterKey=BaseName,ParameterValue=$BASE_NAME
+  # wait for completion
+  aws cloudformation wait stack-create-complete --stack-name ${BASE_NAME}-rds --output text
 fi
+
+# finally, create the ec2 stack
+if ! aws cloudformation describe-stacks --stack-name ${BASE_NAME}-ec2 >/dev/null 2>&1; then
+  # get the appropriate Debian 13 (Trixie) AMI for the current region and architecture
+  TARGET_ARCH=arm64
+  IMAGE_ID=`aws ssm get-parameters-by-path --path /aws/service/debian/release/trixie/latest --output text | grep -m 1 -oP "${TARGET_ARCH}[[:blank:]]+String[[:blank:]]+\K(ami-[^[:blank:]]+)"`
+  # create the stack
+  echo "Creating ${BASE_NAME}-ec2 stack"
+  aws cloudformation create-stack --capabilities CAPABILITY_NAMED_IAM --stack-name ${BASE_NAME}-ec2 --template-body file://./basic/ec2.json --parameters ParameterKey=BaseName,ParameterValue=$BASE_NAME ParameterKey=InstanceImageId,ParameterValue="$IMAGE_ID"
+  # wait for completion
+  aws cloudformation wait stack-create-complete --stack-name ${BASE_NAME}-ec2 --output text
+fi
+
+echo "Done...!"

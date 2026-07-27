@@ -1,6 +1,6 @@
 {
   "AWSTemplateFormatVersion": "2010-09-09",
-  "Description": "EC2 instance with Dokku, Postgres, and LetsEncrypt installed",
+  "Description": "EC2 instance with Dokku and LetsEncrypt installed",
   "Outputs": {
     "PublicDnsName": {
       "Description": "Public DNS name of the instance",
@@ -16,14 +16,6 @@
     }
   },
   "Parameters": {
-    "ApplicationName": {
-      "Description": "Name of the application being set up",
-      "Type": "String"
-    },
-    "DokkuHostname": {
-      "Description": "The domain name for accessing this application",
-      "Type": "String"
-    },
     "DokkuVersion": {
       "Default": "v0.38.24",
       "Description": "Dokku version to install, e.g., \"v0.36.0\" (see https://github.com/dokku/dokku/releases).",
@@ -44,8 +36,38 @@
       "Description": "The application server instance type",
       "Type": "String"
     },
+    "FeatureAssetTypes": {
+      "Description": "A feature flag to configure supported asset types",
+      "Type": "String"
+    },
+    "FeatureRegistration": {
+      "Description": "A feature flag to enable/disable user registration",
+      "Type": "String",
+      "AllowedValues": ["true", "false"]
+    },
+    "FeatureTransitions": {
+      "Description": "A feature flag to enable/disable transitions",
+      "Type": "String",
+      "AllowedValues": ["true", "false"]
+    },
     "LetsEncryptEmail": {
       "Description": "Email address to use with LetsEncrypt, to receive notifications of SSL cert renewals, etc",
+      "Type": "String"
+    },
+    "MapboxAccessToken": {
+      "Description": "The access token for MapBox API",
+      "Type": "String"
+    },
+    "MixpanelToken": {
+      "Description": "The access token for Mixpanel analytics",
+      "Type": "String"
+    },
+    "SessionSecret": {
+      "Description": "A secret key for signing cookie sessions",
+      "Type": "String"
+    },
+    "SiteTitle": {
+      "Description": "The title of the site, used in emails and other notifications.",
       "Type": "String"
     }
   },
