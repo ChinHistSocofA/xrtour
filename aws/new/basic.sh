@@ -42,7 +42,7 @@ if ! aws cloudformation describe-stacks --stack-name ${BASE_NAME}-ses >/dev/null
   echo "Assign DNS records for the following:"
   echo
   echo "TXT ses.$DOMAIN \"v=spf1 include:amazonses.com ~all\""
-  echo "MX ses.$DOMAIN 10 feedback-smtp.$REGION.amazonaws.com"
+  echo "MX ses.$DOMAIN 10 feedback-smtp.$REGION.amazonses.com"
   NAME1=`aws cloudformation describe-stacks --stack-name ${BASE_NAME}-ses --query 'Stacks[0].Outputs[?OutputKey==\`DkimDNSTokenName1\`].OutputValue' --output text`
   VALUE1=`aws cloudformation describe-stacks --stack-name ${BASE_NAME}-ses --query 'Stacks[0].Outputs[?OutputKey==\`DkimDNSTokenValue1\`].OutputValue' --output text`
   NAME2=`aws cloudformation describe-stacks --stack-name ${BASE_NAME}-ses --query 'Stacks[0].Outputs[?OutputKey==\`DkimDNSTokenName2\`].OutputValue' --output text`

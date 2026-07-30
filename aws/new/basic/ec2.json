@@ -26,34 +26,24 @@
       "Type": "Number"
     },
     "InstanceType": {
-      "AllowedValues": [
-        "t4g.small",
-        "t4g.medium",
-        "t4g.large"
-      ],
+      "AllowedValues": ["t4g.small", "t4g.medium", "t4g.large"],
       "Default": "t4g.medium",
       "Description": "The application server instance type",
       "Type": "String"
     },
     "FeatureAssetTypes": {
       "Description": "A feature flag to configure supported asset types",
-      "Type": "String"
+      "Type": "CommaDelimitedList"
     },
     "FeatureRegistration": {
       "Description": "A feature flag to enable/disable user registration",
       "Type": "String",
-      "AllowedValues": [
-        "true",
-        "false"
-      ]
+      "AllowedValues": ["true", "false"]
     },
     "FeatureTransitions": {
       "Description": "A feature flag to enable/disable transitions",
       "Type": "String",
-      "AllowedValues": [
-        "true",
-        "false"
-      ]
+      "AllowedValues": ["true", "false"]
     },
     "GoogleWebfontsApiKey": {
       "Description": "The Google Webfonts API key.",
@@ -171,6 +161,196 @@
                     ]
                   ]
                 },
+                "\" AWS_SES_REGION=\"",
+                {
+                  "Ref": "AWS::Region"
+                },
+                "\" AWS_SES_ACCESS_KEY_ID=\"",
+                {
+                  "Fn::ImportValue": {
+                    "Fn::Sub": "${BaseName}-ses-user-access-key-id"
+                  }
+                },
+                "\" AWS_SES_SECRET_ACCESS_KEY=\"",
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "{{resolve:secretsmanager:",
+                      {
+                        "Fn::ImportValue": {
+                          "Fn::Sub": "${BaseName}-ses-user-secret-access-key-arn"
+                        }
+                      },
+                      "}}"
+                    ]
+                  ]
+                },
+                "\" AWS_S3_ACCESS_KEY_ID=\"",
+                {
+                  "Fn::ImportValue": {
+                    "Fn::Sub": "${BaseName}-bucket-user-access-key-id"
+                  }
+                },
+                "\" AWS_S3_SECRET_ACCESS_KEY=\"",
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "{{resolve:secretsmanager:",
+                      {
+                        "Fn::ImportValue": {
+                          "Fn::Sub": "${BaseName}-bucket-user-secret-access-key-arn"
+                        }
+                      },
+                      "}}"
+                    ]
+                  ]
+                },
+                "\" AWS_S3_BUCKET=\"",
+                {
+                  "Fn::ImportValue": {
+                    "Fn::Sub": "${BaseName}-bucket"
+                  }
+                },
+                "\" AWS_S3_ENDPOINT=\"",
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "https://s3.",
+                      {
+                        "Ref": "AWS::Region"
+                      },
+                      ".amazonaws.com"
+                    ]
+                  ]
+                },
+                "\" AWS_S3_REGION=\"",
+                {
+                  "Ref": "AWS::Region"
+                },
+                "\" AWS_TRANSCRIBE_REGION=\"",
+                {
+                  "Ref": "AWS::Region"
+                },
+                "\" AWS_TRANSCRIBE_ACCESS_KEY_ID=\"",
+                {
+                  "Fn::ImportValue": {
+                    "Fn::Sub": "${BaseName}-bucket-user-access-key-id"
+                  }
+                },
+                "\" AWS_TRANSCRIBE_SECRET_ACCESS_KEY=\"",
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "{{resolve:secretsmanager:",
+                      {
+                        "Fn::ImportValue": {
+                          "Fn::Sub": "${BaseName}-bucket-user-secret-access-key-arn"
+                        }
+                      },
+                      "}}"
+                    ]
+                  ]
+                },
+                "\" AWS_TRANSCRIBE_BUCKET=\"",
+                {
+                  "Fn::ImportValue": {
+                    "Fn::Sub": "${BaseName}-bucket"
+                  }
+                },
+                "\" AWS_TRANSLATE_REGION=\"",
+                {
+                  "Ref": "AWS::Region"
+                },
+                "\" AWS_TRANSLATE_ACCESS_KEY_ID=\"",
+                {
+                  "Fn::ImportValue": {
+                    "Fn::Sub": "${BaseName}-bucket-user-access-key-id"
+                  }
+                },
+                "\" AWS_TRANSLATE_SECRET_ACCESS_KEY=\"",
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "{{resolve:secretsmanager:",
+                      {
+                        "Fn::ImportValue": {
+                          "Fn::Sub": "${BaseName}-bucket-user-secret-access-key-arn"
+                        }
+                      },
+                      "}}"
+                    ]
+                  ]
+                },
+                "\" BASE_URL=\"",
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "https://",
+                      {
+                        "Fn::ImportValue": {
+                          "Fn::Sub": "${BaseName}-domain"
+                        }
+                      }
+                    ]
+                  ]
+                },
+                "\" DATABASE_URL=\"",
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "postgresql://",
+                      {
+                        "Fn::Join": [
+                          "",
+                          [
+                            "{{resolve:secretsmanager:",
+                            {
+                              "Fn::ImportValue": {
+                                "Fn::Sub": "${BaseName}-db-master-user-password-secret-arn"
+                              }
+                            },
+                            ":SecretString:username}}"
+                          ]
+                        ]
+                      },
+                      ":",
+                      {
+                        "Fn::Join": [
+                          "",
+                          [
+                            "{{resolve:secretsmanager:",
+                            {
+                              "Fn::ImportValue": {
+                                "Fn::Sub": "${BaseName}-db-master-user-password-secret-arn"
+                              }
+                            },
+                            ":SecretString:password}}"
+                          ]
+                        ]
+                      },
+                      "@",
+                      {
+                        "Fn::ImportValue": {
+                          "Fn::Sub": "${BaseName}-db-endpoint"
+                        }
+                      },
+                      ":",
+                      {
+                        "Fn::ImportValue": {
+                          "Fn::Sub": "${BaseName}-db-port"
+                        }
+                      },
+                      "/xrtour?sslmode=no-verify"
+                    ]
+                  ]
+                },
                 "\" MIXPANEL_TOKEN=\"",
                 {
                   "Ref": "MixpanelToken"
@@ -179,9 +359,28 @@
                 {
                   "Ref": "SessionSecret"
                 },
+                "\" SMTP_ENABLED=true SMTP_FROM_EMAIL_ADDRESS=\"",
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "no-reply@",
+                      {
+                        "Fn::ImportValue": {
+                          "Fn::Sub": "${BaseName}-domain"
+                        }
+                      }
+                    ]
+                  ]
+                },
                 "\" VITE_FEATURE_ASSET_TYPES=\"",
                 {
-                  "Ref": "FeatureAssetTypes"
+                  "Fn::Join": [
+                    ",",
+                    {
+                      "Ref": "FeatureAssetTypes"
+                    }
+                  ]
                 },
                 "\" VITE_FEATURE_REGISTRATION=\"",
                 {
@@ -238,7 +437,7 @@
       "Properties": {
         "GroupDescription": "Allow http/https/ssh traffic",
         "GroupName": {
-          "Fn::Sub": "${ApplicationName}-dokku-ec2-sg"
+          "Fn::Sub": "${ApplicationName}-ec2-sg"
         },
         "SecurityGroupIngress": [
           {
@@ -259,14 +458,48 @@
             "IpProtocol": "tcp",
             "ToPort": 22
           }
-        ]
+        ],
+        "VpcId": {
+          "Fn::ImportValue": {
+            "Fn::Sub": "${BaseName}-vpc-id"
+          }
+        }
       },
       "Type": "AWS::EC2::SecurityGroup"
+    },
+    "InstanceElasticIPAssociation": {
+      "Properties": {
+        "AllocationId": {
+          "Fn::ImportValue": {
+            "Fn::Sub": "${BaseName}-elastic-ip-0-allocation-id"
+          }
+        },
+        "InstanceId": {
+          "Ref": "Instance"
+        }
+      },
+      "Type": "AWS::EC2::EIPAssociation"
+    },
+    "DatabaseIngressFromInstance": {
+      "Properties": {
+        "SourceSecurityGroupId": {
+          "Fn::GetAtt": ["InstanceSecurityGroup", "GroupId"]
+        },
+        "IpProtocol": "tcp",
+        "FromPort": 5432,
+        "ToPort": 5432,
+        "GroupId": {
+          "Fn::ImportValue": {
+            "Fn::Sub": "${BaseName}-db-sg-id"
+          }
+        }
+      },
+      "Type": "AWS::EC2::SecurityGroupIngress"
     },
     "KeyPair": {
       "Properties": {
         "KeyName": {
-          "Fn::Sub": "${ApplicationName}-dokku-key-pair"
+          "Fn::Sub": "${ApplicationName}-ec2-key-pair"
         }
       },
       "Type": "AWS::EC2::KeyPair"
