@@ -79,7 +79,7 @@
         },
         "GenerateSecretString": {
           "SecretStringTemplate": {
-            "Fn::Sub": "{\"username\":\"${BaseName}\"}"
+            "Fn::Sub": "{\"username\":\"xrtour\"}"
           },
           "GenerateStringKey": "password",
           "PasswordLength": 32,
