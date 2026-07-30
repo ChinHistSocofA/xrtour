@@ -1,24 +1,19 @@
 {
   "AWSTemplateFormatVersion": "2010-09-09",
   "Description": "EC2 instance with Dokku and LetsEncrypt installed",
-  "Outputs": {
-    "PublicDnsName": {
-      "Description": "Public DNS name of the instance",
-      "Value": {
-        "Fn::GetAtt": ["Instance", "PublicDnsName"]
-      }
-    },
-    "PublicIP": {
-      "Description": "Public IP address of the instance",
-      "Value": {
-        "Fn::GetAtt": ["Instance", "PublicIp"]
-      }
-    }
-  },
+  "Outputs": {},
   "Parameters": {
+    "BaseName": {
+      "Description": "Base name for the stack",
+      "Type": "String"
+    },
     "DokkuVersion": {
       "Default": "v0.38.24",
       "Description": "Dokku version to install, e.g., \"v0.36.0\" (see https://github.com/dokku/dokku/releases).",
+      "Type": "String"
+    },
+    "ImageUri": {
+      "Description": "The URI to the server image to deploy",
       "Type": "String"
     },
     "InstanceImageId": {
@@ -31,7 +26,11 @@
       "Type": "Number"
     },
     "InstanceType": {
-      "AllowedValues": ["t4g.small", "t4g.medium", "t4g.large"],
+      "AllowedValues": [
+        "t4g.small",
+        "t4g.medium",
+        "t4g.large"
+      ],
       "Default": "t4g.medium",
       "Description": "The application server instance type",
       "Type": "String"
@@ -43,12 +42,22 @@
     "FeatureRegistration": {
       "Description": "A feature flag to enable/disable user registration",
       "Type": "String",
-      "AllowedValues": ["true", "false"]
+      "AllowedValues": [
+        "true",
+        "false"
+      ]
     },
     "FeatureTransitions": {
       "Description": "A feature flag to enable/disable transitions",
       "Type": "String",
-      "AllowedValues": ["true", "false"]
+      "AllowedValues": [
+        "true",
+        "false"
+      ]
+    },
+    "GoogleWebfontsApiKey": {
+      "Description": "The Google Webfonts API key.",
+      "Type": "String"
     },
     "LetsEncryptEmail": {
       "Description": "Email address to use with LetsEncrypt, to receive notifications of SSL cert renewals, etc",
@@ -127,20 +136,97 @@
                   "Ref": "DokkuVersion"
                 },
                 " bash bootstrap.sh\n",
-                "dokku domains:set-global ",
-                {
-                  "Ref": "DokkuHostname"
-                },
-                "\n",
                 "dokku builder:set --global selected dockerfile\n",
-                "sudo dokku plugin:install https://github.com/dokku/dokku-postgres.git\n",
                 "sudo dokku plugin:install https://github.com/dokku/dokku-letsencrypt.git\n",
                 "dokku letsencrypt:set --global email ",
                 {
                   "Ref": "LetsEncryptEmail"
                 },
                 "\n",
-                "dokku letsencrypt:cron-job --add\n"
+                "dokku apps:create xrtour\n",
+                "dokku config:set xrtour AWS_CLOUDFRONT_DOMAIN=\"",
+                {
+                  "Fn::ImportValue": {
+                    "Fn::Sub": "${BaseName}-cdn-domain"
+                  }
+                },
+                "\" AWS_CLOUDFRONT_KEYPAIR_ID=\"",
+                {
+                  "Fn::ImportValue": {
+                    "Fn::Sub": "${BaseName}-cdn-signing-keypair-id"
+                  }
+                },
+                "\" AWS_CLOUDFRONT_PRIVATE_KEY=\"",
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "{{resolve:secretsmanager:",
+                      {
+                        "Fn::ImportValue": {
+                          "Fn::Sub": "${BaseName}-cdn-signing-private-key-arn"
+                        }
+                      },
+                      "}}"
+                    ]
+                  ]
+                },
+                "\" MIXPANEL_TOKEN=\"",
+                {
+                  "Ref": "MixpanelToken"
+                },
+                "\" SESSION_SECRET=\"",
+                {
+                  "Ref": "SessionSecret"
+                },
+                "\" VITE_FEATURE_ASSET_TYPES=\"",
+                {
+                  "Ref": "FeatureAssetTypes"
+                },
+                "\" VITE_FEATURE_REGISTRATION=\"",
+                {
+                  "Ref": "FeatureRegistration"
+                },
+                "\" VITE_FEATURE_TRANSITIONS=\"",
+                {
+                  "Ref": "FeatureTransitions"
+                },
+                "\" VITE_GOOGLE_WEBFONTS_API_KEY=\"",
+                {
+                  "Ref": "GoogleWebfontsApiKey"
+                },
+                "\" VITE_MAPBOX_ACCESS_TOKEN=\"",
+                {
+                  "Ref": "MapboxAccessToken"
+                },
+                "\" VITE_SITE_TITLE=\"",
+                {
+                  "Ref": "SiteTitle"
+                },
+                "\"\ndokku git:from-image xrtour ",
+                {
+                  "Ref": "ImageUri"
+                },
+                "\ndokku run xrtour \"cd server; npx prisma migrate deploy\"\n",
+                "dokku domains:add xrtour ",
+                {
+                  "Fn::ImportValue": {
+                    "Fn::Sub": "${BaseName}-domain"
+                  }
+                },
+                " *.",
+                {
+                  "Fn::ImportValue": {
+                    "Fn::Sub": "${BaseName}-domain"
+                  }
+                },
+                " *.staging.",
+                {
+                  "Fn::ImportValue": {
+                    "Fn::Sub": "${BaseName}-domain"
+                  }
+                },
+                "\ndokku letsencrypt:enable xrtour\n"
               ]
             ]
           }

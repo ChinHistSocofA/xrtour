@@ -91,7 +91,7 @@ if ! aws cloudformation describe-stacks --stack-name ${BASE_NAME}-ec2 >/dev/null
   IMAGE_ID=`aws ssm get-parameters-by-path --path /aws/service/debian/release/trixie/latest --output text | grep -m 1 -oP "${TARGET_ARCH}[[:blank:]]+String[[:blank:]]+\K(ami-[^[:blank:]]+)"`
   # create the stack
   echo "Creating ${BASE_NAME}-ec2 stack"
-  aws cloudformation create-stack --capabilities CAPABILITY_NAMED_IAM --stack-name ${BASE_NAME}-ec2 --template-body file://./basic/ec2.json --parameters ParameterKey=BaseName,ParameterValue=$BASE_NAME ParameterKey=InstanceImageId,ParameterValue="$IMAGE_ID"
+  aws cloudformation create-stack --capabilities CAPABILITY_NAMED_IAM --stack-name ${BASE_NAME}-ec2 --template-body file://./basic/ec2.json --parameters ParameterKey=BaseName,ParameterValue=$BASE_NAME ParameterKey=ImageUri,ParameterValue="$IMAGE_URI" ParameterKey=InstanceImageId,ParameterValue="$IMAGE_ID" ParameterKey=FeatureAssetTypes,ParameterValue="$VITE_FEATURE_ASSET_TYPES" ParameterKey=FeatureRegistration,ParameterValue="$VITE_FEATURE_REGISTRATION" ParameterKey=FeatureTransitions,ParameterValue="$VITE_FEATURE_TRANSITIONS" ParameterKey=GoogleWebfontsApiKey,ParameterValue="$VITE_GOOGLE_WEBFONTS_API_KEY" ParameterKey=LetsEncryptEmail,ParameterValue="$LETS_ENCRYPT_EMAIL" ParameterKey=MapboxAccessToken,ParameterValue="$VITE_MAPBOX_ACCESS_TOKEN" ParameterKey=MixpanelToken,ParameterValue="$MIXPANEL_TOKEN" ParameterKey=SessionSecret,ParameterValue="$SESSION_SECRET" ParameterKey=SiteTitle,ParameterValue="$VITE_SITE_TITLE"
   # wait for completion
   aws cloudformation wait stack-create-complete --stack-name ${BASE_NAME}-ec2 --output text
 fi

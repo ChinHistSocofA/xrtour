@@ -84,7 +84,7 @@
       },
       "Export": {
         "Name": {
-          "Fn::Sub": "${BaseName}-cloudfront-signing-private-key-arn"
+          "Fn::Sub": "${BaseName}-cdn-signing-private-key-arn"
         }
       }
     }
