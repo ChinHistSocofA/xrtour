@@ -10,22 +10,14 @@
       "Description": "The DB instance type",
       "Type": "String",
       "Default": "db.t4g.small",
-      "AllowedValues": [
-        "db.t4g.micro",
-        "db.t4g.small",
-        "db.t4g.medium",
-        "db.t4g.large"
-      ]
+      "AllowedValues": ["db.t4g.micro", "db.t4g.small", "db.t4g.medium", "db.t4g.large"]
     }
   },
   "Outputs": {
     "DatabaseResourceId": {
       "Description": "The Resource ID of the database",
       "Value": {
-        "Fn::GetAtt": [
-          "Database",
-          "DbiResourceId"
-        ]
+        "Fn::GetAtt": ["Database", "DbiResourceId"]
       },
       "Export": {
         "Name": {
@@ -47,10 +39,7 @@
     "DatabaseEndpoint": {
       "Description": "The endpoint of the database",
       "Value": {
-        "Fn::GetAtt": [
-          "Database",
-          "Endpoint.Address"
-        ]
+        "Fn::GetAtt": ["Database", "Endpoint.Address"]
       },
       "Export": {
         "Name": {
@@ -61,10 +50,7 @@
     "DatabasePort": {
       "Description": "The port of the database",
       "Value": {
-        "Fn::GetAtt": [
-          "Database",
-          "Endpoint.Port"
-        ]
+        "Fn::GetAtt": ["Database", "Endpoint.Port"]
       },
       "Export": {
         "Name": {
@@ -169,10 +155,7 @@
         "StorageEncrypted": true,
         "VPCSecurityGroups": [
           {
-            "Fn::GetAtt": [
-              "DatabaseSecurityGroup",
-              "GroupId"
-            ]
+            "Fn::GetAtt": ["DatabaseSecurityGroup", "GroupId"]
           }
         ]
       },
