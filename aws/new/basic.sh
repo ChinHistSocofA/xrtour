@@ -91,9 +91,20 @@ if ! aws cloudformation describe-stacks --stack-name ${BASE_NAME}-ec2 >/dev/null
   IMAGE_ID=`aws ssm get-parameters-by-path --path /aws/service/debian/release/trixie/latest --output text | grep -m 1 -oP "${TARGET_ARCH}[[:blank:]]+String[[:blank:]]+\K(ami-[^[:blank:]]+)"`
   # create the stack
   echo "Creating ${BASE_NAME}-ec2 stack"
-  aws cloudformation create-stack --capabilities CAPABILITY_NAMED_IAM --stack-name ${BASE_NAME}-ec2 --template-body file://./basic/ec2.json --parameters ParameterKey=BaseName,ParameterValue=$BASE_NAME ParameterKey=ImageUri,ParameterValue="$IMAGE_URI" ParameterKey=InstanceImageId,ParameterValue="$IMAGE_ID" ParameterKey=FeatureAssetTypes,ParameterValue="$VITE_FEATURE_ASSET_TYPES" ParameterKey=FeatureRegistration,ParameterValue="$VITE_FEATURE_REGISTRATION" ParameterKey=FeatureTransitions,ParameterValue="$VITE_FEATURE_TRANSITIONS" ParameterKey=GoogleWebfontsApiKey,ParameterValue="$VITE_GOOGLE_WEBFONTS_API_KEY" ParameterKey=LetsEncryptEmail,ParameterValue="$LETS_ENCRYPT_EMAIL" ParameterKey=MapboxAccessToken,ParameterValue="$VITE_MAPBOX_ACCESS_TOKEN" ParameterKey=MixpanelToken,ParameterValue="$MIXPANEL_TOKEN" ParameterKey=SessionSecret,ParameterValue="$SESSION_SECRET" ParameterKey=SiteTitle,ParameterValue="$VITE_SITE_TITLE"
+  aws cloudformation create-stack --capabilities CAPABILITY_NAMED_IAM --stack-name ${BASE_NAME}-ec2 --template-body file://./basic/ec2.json --parameters ParameterKey=BaseName,ParameterValue=$BASE_NAME ParameterKey=ImageUri,ParameterValue="$IMAGE_URI" ParameterKey=InstanceImageId,ParameterValue="$IMAGE_ID" ParameterKey=FeatureAssetTypes,ParameterValue="${VITE_FEATURE_ASSET_TYPES//,/\\,}" ParameterKey=FeatureRegistration,ParameterValue="$VITE_FEATURE_REGISTRATION" ParameterKey=FeatureTransitions,ParameterValue="$VITE_FEATURE_TRANSITIONS" ParameterKey=GoogleWebfontsApiKey,ParameterValue="$VITE_GOOGLE_WEBFONTS_API_KEY" ParameterKey=LetsEncryptEmail,ParameterValue="$LETSENCRYPT_EMAIL" ParameterKey=MapboxAccessToken,ParameterValue="$VITE_MAPBOX_ACCESS_TOKEN" ParameterKey=MixpanelToken,ParameterValue="$MIXPANEL_TOKEN" ParameterKey=SessionSecret,ParameterValue="$SESSION_SECRET" ParameterKey=SiteTitle,ParameterValue="$VITE_SITE_TITLE"
   # wait for completion
   aws cloudformation wait stack-create-complete --stack-name ${BASE_NAME}-ec2 --output text
+  # wait for key pair to become available
+  while : ; do
+    KEY_NAME=`aws ec2 describe-key-pairs --filters Name=key-name,Values=${BASE_NAME}-ec2-key-pair --query KeyPairs[*].KeyPairId --output text`
+    if [ "$KEY_NAME" != "" ]; then
+      break
+    fi
+    sleep 1
+  done
+  # download into a pem file in ~/.ssh
+  aws ssm get-parameter --name /ec2/keypair/${KEY_NAME} --with-decryption --query Parameter.Value --output text > ~/.ssh/${BASE_NAME}-key-pair.pem
+  chmod 600 ~/.ssh/${BASE_NAME}-key-pair.pem
 fi
 
 echo "Done...!"

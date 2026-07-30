@@ -33,7 +33,7 @@
     },
     "FeatureAssetTypes": {
       "Description": "A feature flag to configure supported asset types",
-      "Type": "CommaDelimitedList"
+      "Type": "String"
     },
     "FeatureRegistration": {
       "Description": "A feature flag to enable/disable user registration",
@@ -95,9 +95,19 @@
         "KeyName": {
           "Ref": "KeyPair"
         },
-        "SecurityGroups": [
+        "NetworkInterfaces": [
           {
-            "Ref": "InstanceSecurityGroup"
+            "DeviceIndex": "0",
+            "SubnetId": {
+              "Fn::ImportValue": {
+                "Fn::Sub": "${BaseName}-public-subnet-az0-id"
+              }
+            },
+            "GroupSet": [
+              {
+                "Ref": "InstanceSecurityGroup"
+              }
+            ]
           }
         ],
         "Tags": [
@@ -134,10 +144,35 @@
                 },
                 "\n",
                 "dokku apps:create xrtour\n",
+                "AWS_CLOUDFRONT_PRIVATE_KEY=`aws secretsmanager get-secret-value --query SecretString --output text --secret-id \"",
+                {
+                  "Fn::ImportValue": {
+                    "Fn::Sub": "${BaseName}-cdn-signing-private-key-arn"
+                  }
+                },
+                "\"`\nAWS_SES_SECRET_ACCESS_KEY=`aws secretsmanager get-secret-value --query SecretString --output text --secret-id \"",
+                {
+                  "Fn::ImportValue": {
+                    "Fn::Sub": "${BaseName}-ses-user-secret-access-key-arn"
+                  }
+                },
+                "\"`\nAWS_S3_SECRET_ACCESS_KEY=`aws secretsmanager get-secret-value --query SecretString --output text --secret-id \"",
+                {
+                  "Fn::ImportValue": {
+                    "Fn::Sub": "${BaseName}-bucket-user-secret-access-key-arn"
+                  }
+                },
+                "\"`\nDATABASE_SECRET=`aws secretsmanager get-secret-value --query SecretString --output text --secret-id \"",
+                {
+                  "Fn::ImportValue": {
+                    "Fn::Sub": "${BaseName}-db-master-user-password-secret-arn"
+                  }
+                },
+                "\"`\n",
                 "dokku config:set xrtour AWS_CLOUDFRONT_DOMAIN=\"",
                 {
                   "Fn::ImportValue": {
-                    "Fn::Sub": "${BaseName}-cdn-domain"
+                    "Fn::Sub": "${BaseName}-cdn-domain-name"
                   }
                 },
                 "\" AWS_CLOUDFRONT_KEYPAIR_ID=\"",
@@ -146,22 +181,7 @@
                     "Fn::Sub": "${BaseName}-cdn-signing-keypair-id"
                   }
                 },
-                "\" AWS_CLOUDFRONT_PRIVATE_KEY=\"",
-                {
-                  "Fn::Join": [
-                    "",
-                    [
-                      "{{resolve:secretsmanager:",
-                      {
-                        "Fn::ImportValue": {
-                          "Fn::Sub": "${BaseName}-cdn-signing-private-key-arn"
-                        }
-                      },
-                      "}}"
-                    ]
-                  ]
-                },
-                "\" AWS_SES_REGION=\"",
+                "\" AWS_CLOUDFRONT_PRIVATE_KEY=\"$AWS_CLOUDFRONT_PRIVATE_KEY\" AWS_SES_REGION=\"",
                 {
                   "Ref": "AWS::Region"
                 },
@@ -171,43 +191,13 @@
                     "Fn::Sub": "${BaseName}-ses-user-access-key-id"
                   }
                 },
-                "\" AWS_SES_SECRET_ACCESS_KEY=\"",
-                {
-                  "Fn::Join": [
-                    "",
-                    [
-                      "{{resolve:secretsmanager:",
-                      {
-                        "Fn::ImportValue": {
-                          "Fn::Sub": "${BaseName}-ses-user-secret-access-key-arn"
-                        }
-                      },
-                      "}}"
-                    ]
-                  ]
-                },
-                "\" AWS_S3_ACCESS_KEY_ID=\"",
+                "\" AWS_SES_SECRET_ACCESS_KEY=\"$AWS_SES_SECRET_ACCESS_KEY\" AWS_S3_ACCESS_KEY_ID=\"",
                 {
                   "Fn::ImportValue": {
                     "Fn::Sub": "${BaseName}-bucket-user-access-key-id"
                   }
                 },
-                "\" AWS_S3_SECRET_ACCESS_KEY=\"",
-                {
-                  "Fn::Join": [
-                    "",
-                    [
-                      "{{resolve:secretsmanager:",
-                      {
-                        "Fn::ImportValue": {
-                          "Fn::Sub": "${BaseName}-bucket-user-secret-access-key-arn"
-                        }
-                      },
-                      "}}"
-                    ]
-                  ]
-                },
-                "\" AWS_S3_BUCKET=\"",
+                "\" AWS_S3_SECRET_ACCESS_KEY=\"$AWS_S3_SECRET_ACCESS_KEY\" AWS_S3_BUCKET=\"",
                 {
                   "Fn::ImportValue": {
                     "Fn::Sub": "${BaseName}-bucket"
@@ -240,22 +230,7 @@
                     "Fn::Sub": "${BaseName}-bucket-user-access-key-id"
                   }
                 },
-                "\" AWS_TRANSCRIBE_SECRET_ACCESS_KEY=\"",
-                {
-                  "Fn::Join": [
-                    "",
-                    [
-                      "{{resolve:secretsmanager:",
-                      {
-                        "Fn::ImportValue": {
-                          "Fn::Sub": "${BaseName}-bucket-user-secret-access-key-arn"
-                        }
-                      },
-                      "}}"
-                    ]
-                  ]
-                },
-                "\" AWS_TRANSCRIBE_BUCKET=\"",
+                "\" AWS_TRANSCRIBE_SECRET_ACCESS_KEY=\"$AWS_S3_SECRET_ACCESS_KEY\" AWS_TRANSCRIBE_BUCKET=\"",
                 {
                   "Fn::ImportValue": {
                     "Fn::Sub": "${BaseName}-bucket"
@@ -271,22 +246,7 @@
                     "Fn::Sub": "${BaseName}-bucket-user-access-key-id"
                   }
                 },
-                "\" AWS_TRANSLATE_SECRET_ACCESS_KEY=\"",
-                {
-                  "Fn::Join": [
-                    "",
-                    [
-                      "{{resolve:secretsmanager:",
-                      {
-                        "Fn::ImportValue": {
-                          "Fn::Sub": "${BaseName}-bucket-user-secret-access-key-arn"
-                        }
-                      },
-                      "}}"
-                    ]
-                  ]
-                },
-                "\" BASE_URL=\"",
+                "\" AWS_TRANSLATE_SECRET_ACCESS_KEY=\"$AWS_S3_SECRET_ACCESS_KEY\" BASE_URL=\"",
                 {
                   "Fn::Join": [
                     "",
@@ -305,37 +265,7 @@
                   "Fn::Join": [
                     "",
                     [
-                      "postgresql://",
-                      {
-                        "Fn::Join": [
-                          "",
-                          [
-                            "{{resolve:secretsmanager:",
-                            {
-                              "Fn::ImportValue": {
-                                "Fn::Sub": "${BaseName}-db-master-user-password-secret-arn"
-                              }
-                            },
-                            ":SecretString:username}}"
-                          ]
-                        ]
-                      },
-                      ":",
-                      {
-                        "Fn::Join": [
-                          "",
-                          [
-                            "{{resolve:secretsmanager:",
-                            {
-                              "Fn::ImportValue": {
-                                "Fn::Sub": "${BaseName}-db-master-user-password-secret-arn"
-                              }
-                            },
-                            ":SecretString:password}}"
-                          ]
-                        ]
-                      },
-                      "@",
+                      "postgresql://$(echo $DATABASE_SECRET | jq -r '.username'):$(echo $DATABASE_SECRET | jq -r '.password')@",
                       {
                         "Fn::ImportValue": {
                           "Fn::Sub": "${BaseName}-db-endpoint"
@@ -375,12 +305,7 @@
                 },
                 "\" VITE_FEATURE_ASSET_TYPES=\"",
                 {
-                  "Fn::Join": [
-                    ",",
-                    {
-                      "Ref": "FeatureAssetTypes"
-                    }
-                  ]
+                  "Ref": "FeatureAssetTypes"
                 },
                 "\" VITE_FEATURE_REGISTRATION=\"",
                 {
@@ -433,11 +358,82 @@
       },
       "Type": "AWS::EC2::Instance"
     },
+    "InstanceRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Action": ["sts:AssumeRole"],
+              "Effect": "Allow",
+              "Principal": {
+                "Service": ["ec2.amazonaws.com"]
+              }
+            }
+          ]
+        },
+        "Policies": [
+          {
+            "PolicyName": {
+              "Fn::Sub": "${BaseName}-ec2-secrets-policy"
+            },
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Action": ["secretsmanager:GetSecretValue"],
+                  "Effect": "Allow",
+                  "Resource": [
+                    {
+                      "Fn::ImportValue": {
+                        "Fn::Sub": "${BaseName}-bucket-user-secret-access-key-arn"
+                      }
+                    },
+                    {
+                      "Fn::ImportValue": {
+                        "Fn::Sub": "${BaseName}-cdn-signing-private-key-arn"
+                      }
+                    },
+                    {
+                      "Fn::ImportValue": {
+                        "Fn::Sub": "${BaseName}-db-master-user-password-secret-arn"
+                      }
+                    },
+                    {
+                      "Fn::ImportValue": {
+                        "Fn::Sub": "${BaseName}-ses-user-secret-access-key-arn"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ],
+        "RoleName": {
+          "Fn::Sub": "${BaseName}-ec2-iam-role"
+        }
+      }
+    },
+    "InstanceProfile": {
+      "Type": "AWS::IAM::InstanceProfile",
+      "Properties": {
+        "InstanceProfileName": {
+          "Fn::Sub": "${BaseName}-ec2-iam-instance-profile"
+        },
+        "Roles": [
+          {
+            "Ref": "InstanceRole"
+          }
+        ]
+      }
+    },
     "InstanceSecurityGroup": {
       "Properties": {
         "GroupDescription": "Allow http/https/ssh traffic",
         "GroupName": {
-          "Fn::Sub": "${ApplicationName}-ec2-sg"
+          "Fn::Sub": "${BaseName}-ec2-sg"
         },
         "SecurityGroupIngress": [
           {
@@ -499,7 +495,7 @@
     "KeyPair": {
       "Properties": {
         "KeyName": {
-          "Fn::Sub": "${ApplicationName}-ec2-key-pair"
+          "Fn::Sub": "${BaseName}-ec2-key-pair"
         }
       },
       "Type": "AWS::EC2::KeyPair"
