@@ -23,7 +23,5 @@ To allow LetsEncrypt to validate wildcard SSL certs, you'll need to configure a 
 
 For example, to configure CloudFlare:
 
-dokku letsencrypt:set --global dns-provider cloudflare
-dokku letsencrypt:set --global dns-provider-CF_API_EMAIL <your-cf-email>
-dokku letsencrypt:set --global dns-provider-CF_DNS_API_TOKEN <your-cf-dns-api-token>
-dokku letsencrypt:set --global dns-provider-CF_ZONE_API_TOKEN <your-cf-zone-api-token>
+dokku letsencrypt:set xrtour dns-provider cloudflare
+dokku letsencrypt:set xrtour dns-provider-CF_DNS_API_TOKEN <your-cf-dns-api-token>

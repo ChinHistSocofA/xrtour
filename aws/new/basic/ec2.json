@@ -8,7 +8,7 @@
       "Type": "String"
     },
     "DokkuVersion": {
-      "Default": "v0.38.24",
+      "Default": "v0.38.25",
       "Description": "Dokku version to install, e.g., \"v0.36.0\" (see https://github.com/dokku/dokku/releases).",
       "Type": "String"
     },
