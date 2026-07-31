@@ -1,1 +1,1 @@
-web: cd server && node ./bin/www
+web: ./node_modules/.bin/pm2-runtime ./server/bin/www
