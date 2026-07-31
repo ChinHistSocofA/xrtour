@@ -143,6 +143,7 @@
                   "Ref": "LetsEncryptEmail"
                 },
                 "\n",
+                "dokku letsencrypt:cron-job --add\n",
                 "dokku apps:create xrtour\n",
                 "AWS_CLOUDFRONT_PRIVATE_KEY=`aws secretsmanager get-secret-value --query SecretString --output text --secret-id \"",
                 {
@@ -277,7 +278,7 @@
                           "Fn::Sub": "${BaseName}-db-port"
                         }
                       },
-                      "/xrtour?sslmode=no-verify"
+                      "/xrtour"
                     ]
                   ]
                 },
@@ -285,7 +286,7 @@
                 {
                   "Ref": "MixpanelToken"
                 },
-                "\" SESSION_SECRET=\"",
+                "\" NODE_ENV=production SESSION_SECRET=\"",
                 {
                   "Ref": "SessionSecret"
                 },
@@ -331,7 +332,8 @@
                 {
                   "Ref": "ImageUri"
                 },
-                "\ndokku run xrtour \"cd server; npx prisma migrate deploy\"\n",
+                "\ndokku run xrtour bash -c \"cd server; npx sequelize db:migrate\"\n",
+                "dokku domains:clear xrtour\n",
                 "dokku domains:add xrtour ",
                 {
                   "Fn::ImportValue": {
@@ -350,7 +352,7 @@
                     "Fn::Sub": "${BaseName}-domain"
                   }
                 },
-                "\ndokku letsencrypt:enable xrtour\n"
+                "\n"
               ]
             ]
           }

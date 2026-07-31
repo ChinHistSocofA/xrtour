@@ -105,6 +105,14 @@ if ! aws cloudformation describe-stacks --stack-name ${BASE_NAME}-ec2 >/dev/null
   # download into a pem file in ~/.ssh
   aws ssm get-parameter --name /ec2/keypair/${KEY_NAME} --with-decryption --query Parameter.Value --output text > ~/.ssh/${BASE_NAME}-key-pair.pem
   chmod 600 ~/.ssh/${BASE_NAME}-key-pair.pem
+  echo "Log in to the new instance:"
+  echo "ssh -i ~/.ssh/${BASE_NAME}-key-pair.pem admin@${DOMAIN}"
+  echo "Follow the post-launch initialation log:"
+  echo "tail -f /var/log/cloud-init-output.log"
+  echo "Once completed, configure LetsEncrypt with a DNS solver for YOUR domain nameserver host so that wildcard SSL certs can be obtained, then run:"
+  echo "dokku letsencrypt:enable xrtour"
+  echo "Create a bootstrap super-user account:"
+  echo "dokku run xrtour bash -c \"cd server; bin/create-admin First Last email@address.com password\""
 fi
 
 echo "Done...!"
