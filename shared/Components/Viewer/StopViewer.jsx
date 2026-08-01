@@ -241,7 +241,9 @@ function StopViewer({
       if (isPlaying) {
         setPlaying(false);
         if (index >= tracks.length - 1) {
-          onEnded?.(!sr.pauseAtEnd);
+          if (!sr.pauseAtEnd) {
+            onEnded?.(true);
+          }
         } else {
           setCurrentTrack(tracks[index + 1]);
           onPause?.();
