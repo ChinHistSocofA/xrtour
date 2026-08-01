@@ -242,7 +242,7 @@ function StopViewer({
         setPlaying(false);
         if (index >= tracks.length - 1) {
           if (!sr.pauseAtEnd) {
-            onEnded?.(false);
+            onEnded?.(true);
           }
         } else {
           setCurrentTrack(tracks[index + 1]);
