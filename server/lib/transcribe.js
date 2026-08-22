@@ -9,11 +9,13 @@ import { TranscribeClient, StartTranscriptionJobCommand, GetTranscriptionJobComm
 
 const config = {
   region: process.env.AWS_TRANSCRIBE_REGION,
-  credentials: {
+};
+if (process.env.AWS_TRANSCRIBE_ACCESS_KEY_ID && process.env.AWS_TRANSCRIBE_SECRET_ACCESS_KEY) {
+  config.credentials = {
     accessKeyId: process.env.AWS_TRANSCRIBE_ACCESS_KEY_ID,
     secretAccessKey: process.env.AWS_TRANSCRIBE_SECRET_ACCESS_KEY,
-  },
-};
+  };
+}
 const client = new TranscribeClient(config);
 const s3client = new S3Client({
   ...config,

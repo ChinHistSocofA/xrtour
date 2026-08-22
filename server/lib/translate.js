@@ -5,13 +5,16 @@ import path from 'path';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-const client = new TranslateClient({
+const config = {
   region: process.env.AWS_TRANSLATE_REGION,
-  credentials: {
+};
+if (process.env.AWS_TRANSLATE_ACCESS_KEY_ID && process.env.AWS_TRANSLATE_SECRET_ACCESS_KEY) {
+  config.credentials = {
     accessKeyId: process.env.AWS_TRANSLATE_ACCESS_KEY_ID,
     secretAccessKey: process.env.AWS_TRANSLATE_SECRET_ACCESS_KEY,
-  },
-});
+  };
+}
+const client = new TranslateClient(config);
 
 // create/update custom terminology
 try {
