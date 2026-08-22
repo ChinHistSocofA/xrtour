@@ -44,6 +44,6 @@ if [[ $BRANCH == 'main' ]]; then
     # build and push
     SCRIPT_DIR=`dirname $BASH_SOURCE`
     BUILD_PATH=`readlink -f $SCRIPT_DIR/..`
-    docker buildx build --push --platform linux/arm64,linux/amd64 --tag $REPO/$APP_NAME:$TAG --tag francisli/xrtour:$TAG $BUILD_PATH
+    docker buildx build --push --platform linux/arm64,linux/amd64 --tag $REPO/$APP_NAME:$TAG --tag chinhistsocofa/xrtour:$TAG $BUILD_PATH
   fi
 fi
