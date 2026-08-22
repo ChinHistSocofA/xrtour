@@ -216,9 +216,9 @@ router.post('/import', interceptors.requireLogin, async (req, res) => {
         for (const fileData of resourceData.Files ?? []) {
           const newFileId = uuid();
           if (fileData.key) {
-            const zipEntry = zip.getEntry(`files/${fileData.id}/key/${fileData.key}`);
+            const zipEntry = zip.getEntry(`files/${fileData.id}/key/${path.basename(fileData.key)}`);
             if (zipEntry) {
-              await s3.putObjectData(path.join(assetPrefix, 'files', newFileId, 'key', fileData.key), zipEntry.getData());
+              await s3.putObjectData(path.join(assetPrefix, 'files', newFileId, 'key', path.basename(fileData.key)), zipEntry.getData());
             }
           }
           // hooks: false prevents File.afterSave from trying to move uploads/{key} which doesn't exist here
