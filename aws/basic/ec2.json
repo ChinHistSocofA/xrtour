@@ -191,6 +191,12 @@
                     ]
                   ]
                 },
+                "\" AWS_S3_BUCKET=\"",
+                {
+                  "Fn::ImportValue": {
+                    "Fn::Sub": "${BaseName}-bucket-name"
+                  }
+                },
                 "\" AWS_TRANSCRIBE_BUCKET=\"",
                 {
                   "Fn::ImportValue": {
