@@ -240,7 +240,7 @@
                 {
                   "Ref": "SessionSecret"
                 },
-                "\" SMTP_ENABLED=true SMTP_FROM_EMAIL_ADDRESS=\"",
+                "\" EMAIL_TRANSPORT=smtp EMAIL_FROM_ADDRESS=\"",
                 {
                   "Fn::Join": [
                     "",
