@@ -216,9 +216,9 @@ router.post('/import', interceptors.requireLogin, async (req, res) => {
         for (const fileData of resourceData.Files ?? []) {
           const newFileId = uuid();
           if (fileData.key) {
-            const zipEntry = zip.getEntry(`files/${fileData.id}/key/${fileData.key}`);
+            const zipEntry = zip.getEntry(`files/${fileData.id}/key/${path.basename(fileData.key)}`);
             if (zipEntry) {
-              await s3.putObjectData(path.join(assetPrefix, 'files', newFileId, 'key', fileData.key), zipEntry.getData());
+              await s3.putObjectData(path.join(assetPrefix, 'files', newFileId, 'key', path.basename(fileData.key)), zipEntry.getData());
             }
           }
           // hooks: false prevents File.afterSave from trying to move uploads/{key} which doesn't exist here
@@ -395,7 +395,7 @@ router.get('/:id/export', interceptors.requireLogin, async (req, res) => {
     archive.pipe(res);
     archive.append(JSON.stringify(exportData, null, 2), { name: 'tour.json' });
     for (const f of fileInstances) {
-      archive.append(await s3.getObjectStream(f.getAssetPath('key')), { name: `files/${f.id}/key/${f.key}` });
+      archive.append(await s3.getObjectStream(f.getAssetPath('key')), { name: `files/${f.id}/key/${path.basename(f.key)}` });
     }
     await new Promise((resolve, reject) => {
       archive.on('finish', resolve);
