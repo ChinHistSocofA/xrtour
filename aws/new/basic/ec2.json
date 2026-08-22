@@ -26,11 +26,7 @@
       "Type": "Number"
     },
     "InstanceType": {
-      "AllowedValues": [
-        "t4g.small",
-        "t4g.medium",
-        "t4g.large"
-      ],
+      "AllowedValues": ["t4g.small", "t4g.medium", "t4g.large"],
       "Default": "t4g.medium",
       "Description": "The application server instance type",
       "Type": "String"
@@ -42,18 +38,12 @@
     "FeatureRegistration": {
       "Description": "A feature flag to enable/disable user registration",
       "Type": "String",
-      "AllowedValues": [
-        "true",
-        "false"
-      ]
+      "AllowedValues": ["true", "false"]
     },
     "FeatureTransitions": {
       "Description": "A feature flag to enable/disable transitions",
       "Type": "String",
-      "AllowedValues": [
-        "true",
-        "false"
-      ]
+      "AllowedValues": ["true", "false"]
     },
     "GoogleWebfontsApiKey": {
       "Description": "The Google Webfonts API key.",
@@ -327,14 +317,10 @@
           "Version": "2012-10-17",
           "Statement": [
             {
-              "Action": [
-                "sts:AssumeRole"
-              ],
+              "Action": ["sts:AssumeRole"],
               "Effect": "Allow",
               "Principal": {
-                "Service": [
-                  "ec2.amazonaws.com"
-                ]
+                "Service": ["ec2.amazonaws.com"]
               }
             }
           ]
@@ -349,9 +335,7 @@
               "Statement": [
                 {
                   "Effect": "Allow",
-                  "Action": [
-                    "secretsmanager:GetSecretValue"
-                  ],
+                  "Action": ["secretsmanager:GetSecretValue"],
                   "Resource": [
                     {
                       "Fn::ImportValue": {
@@ -367,10 +351,7 @@
                 },
                 {
                   "Effect": "Allow",
-                  "Action": [
-                    "ses:SendEmail",
-                    "ses:SendRawEmail"
-                  ],
+                  "Action": ["ses:SendEmail", "ses:SendRawEmail"],
                   "Resource": [
                     {
                       "Fn::ImportValue": {
@@ -381,12 +362,7 @@
                 },
                 {
                   "Effect": "Allow",
-                  "Action": [
-                    "s3:PutObject",
-                    "s3:GetObject",
-                    "s3:ListBucket",
-                    "s3:DeleteObject"
-                  ],
+                  "Action": ["s3:PutObject", "s3:GetObject", "s3:ListBucket", "s3:DeleteObject"],
                   "Resource": [
                     {
                       "Fn::Join": [
@@ -500,10 +476,7 @@
     "DatabaseIngressFromInstance": {
       "Properties": {
         "SourceSecurityGroupId": {
-          "Fn::GetAtt": [
-            "InstanceSecurityGroup",
-            "GroupId"
-          ]
+          "Fn::GetAtt": ["InstanceSecurityGroup", "GroupId"]
         },
         "IpProtocol": "tcp",
         "FromPort": 5432,
