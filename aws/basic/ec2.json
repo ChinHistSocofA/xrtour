@@ -8,7 +8,7 @@
       "Type": "String"
     },
     "DokkuVersion": {
-      "Default": "v0.38.25",
+      "Default": "v0.38.27",
       "Description": "Dokku version to install, e.g., \"v0.36.0\" (see https://github.com/dokku/dokku/releases).",
       "Type": "String"
     },
@@ -240,7 +240,7 @@
                 {
                   "Ref": "SessionSecret"
                 },
-                "\" EMAIL_TRANSPORT=smtp EMAIL_FROM_ADDRESS=\"",
+                "\" EMAIL_TRANSPORT=ses EMAIL_FROM_ADDRESS=\"",
                 {
                   "Fn::Join": [
                     "",
