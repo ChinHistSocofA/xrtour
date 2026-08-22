@@ -1,0 +1,501 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "EC2 instance with Dokku and LetsEncrypt installed",
+  "Outputs": {},
+  "Parameters": {
+    "BaseName": {
+      "Description": "Base name for the stack",
+      "Type": "String"
+    },
+    "DokkuVersion": {
+      "Default": "v0.38.25",
+      "Description": "Dokku version to install, e.g., \"v0.36.0\" (see https://github.com/dokku/dokku/releases).",
+      "Type": "String"
+    },
+    "ImageUri": {
+      "Description": "The URI to the server image to deploy",
+      "Type": "String"
+    },
+    "InstanceImageId": {
+      "Description": "The AMI ID for the application server instance",
+      "Type": "String"
+    },
+    "InstanceRootVolumeSize": {
+      "Default": "48",
+      "Description": "The size of the root volume (in GB).",
+      "Type": "Number"
+    },
+    "InstanceType": {
+      "AllowedValues": ["t4g.small", "t4g.medium", "t4g.large"],
+      "Default": "t4g.medium",
+      "Description": "The application server instance type",
+      "Type": "String"
+    },
+    "FeatureAssetTypes": {
+      "Description": "A feature flag to configure supported asset types",
+      "Type": "String"
+    },
+    "FeatureRegistration": {
+      "Description": "A feature flag to enable/disable user registration",
+      "Type": "String",
+      "AllowedValues": ["true", "false"]
+    },
+    "FeatureTransitions": {
+      "Description": "A feature flag to enable/disable transitions",
+      "Type": "String",
+      "AllowedValues": ["true", "false"]
+    },
+    "GoogleWebfontsApiKey": {
+      "Description": "The Google Webfonts API key.",
+      "Type": "String",
+      "NoEcho": "true"
+    },
+    "LetsEncryptEmail": {
+      "Description": "Email address to use with LetsEncrypt, to receive notifications of SSL cert renewals, etc",
+      "Type": "String"
+    },
+    "MapboxAccessToken": {
+      "Description": "The access token for MapBox API",
+      "Type": "String",
+      "NoEcho": "true"
+    },
+    "MixpanelToken": {
+      "Description": "The access token for Mixpanel analytics",
+      "Type": "String",
+      "NoEcho": "true"
+    },
+    "SessionSecret": {
+      "Description": "A secret key for signing cookie sessions",
+      "Type": "String",
+      "NoEcho": "true"
+    },
+    "SiteTitle": {
+      "Description": "The title of the site, used in emails and other notifications.",
+      "Type": "String"
+    }
+  },
+  "Resources": {
+    "Instance": {
+      "Properties": {
+        "BlockDeviceMappings": [
+          {
+            "DeviceName": "/dev/xvda",
+            "Ebs": {
+              "VolumeSize": {
+                "Ref": "InstanceRootVolumeSize"
+              }
+            }
+          }
+        ],
+        "IamInstanceProfile": {
+          "Ref": "InstanceProfile"
+        },
+        "ImageId": {
+          "Ref": "InstanceImageId"
+        },
+        "InstanceType": {
+          "Ref": "InstanceType"
+        },
+        "KeyName": {
+          "Ref": "KeyPair"
+        },
+        "NetworkInterfaces": [
+          {
+            "DeviceIndex": "0",
+            "SubnetId": {
+              "Fn::ImportValue": {
+                "Fn::Sub": "${BaseName}-public-subnet-az0-id"
+              }
+            },
+            "GroupSet": [
+              {
+                "Ref": "InstanceSecurityGroup"
+              }
+            ]
+          }
+        ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": {
+              "Ref": "AWS::StackName"
+            }
+          }
+        ],
+        "UserData": {
+          "Fn::Base64": {
+            "Fn::Join": [
+              "",
+              [
+                "#!/bin/bash\n",
+                "sudo apt-get update -y\n",
+                "sudo apt-get install -y cron\n",
+                "wget -NP . https://dokku.com/install/",
+                {
+                  "Ref": "DokkuVersion"
+                },
+                "/bootstrap.sh\n",
+                "sudo DOKKU_TAG=",
+                {
+                  "Ref": "DokkuVersion"
+                },
+                " bash bootstrap.sh\n",
+                "dokku builder:set --global selected dockerfile\n",
+                "sudo dokku plugin:install https://github.com/dokku/dokku-letsencrypt.git\n",
+                "dokku letsencrypt:set --global email ",
+                {
+                  "Ref": "LetsEncryptEmail"
+                },
+                "\n",
+                "dokku letsencrypt:cron-job --add\n",
+                "dokku apps:create xrtour\n",
+                "AWS_CLOUDFRONT_PRIVATE_KEY=`aws secretsmanager get-secret-value --query SecretString --output text --secret-id \"",
+                {
+                  "Fn::ImportValue": {
+                    "Fn::Sub": "${BaseName}-cdn-signing-private-key-arn"
+                  }
+                },
+                "\"`\nDATABASE_SECRET=`aws secretsmanager get-secret-value --query SecretString --output text --secret-id \"",
+                {
+                  "Fn::ImportValue": {
+                    "Fn::Sub": "${BaseName}-db-master-user-password-secret-arn"
+                  }
+                },
+                "\"`\n",
+                "dokku config:set xrtour AWS_CLOUDFRONT_DOMAIN=\"",
+                {
+                  "Fn::ImportValue": {
+                    "Fn::Sub": "${BaseName}-cdn-domain-name"
+                  }
+                },
+                "\" AWS_CLOUDFRONT_KEYPAIR_ID=\"",
+                {
+                  "Fn::ImportValue": {
+                    "Fn::Sub": "${BaseName}-cdn-signing-keypair-id"
+                  }
+                },
+                "\" AWS_CLOUDFRONT_PRIVATE_KEY=\"$AWS_CLOUDFRONT_PRIVATE_KEY\" AWS_REGION=\"",
+                {
+                  "Ref": "AWS::Region"
+                },
+                "\" AWS_S3_ENDPOINT=\"",
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "https://s3.",
+                      {
+                        "Ref": "AWS::Region"
+                      },
+                      ".amazonaws.com"
+                    ]
+                  ]
+                },
+                "\" AWS_TRANSCRIBE_BUCKET=\"",
+                {
+                  "Fn::ImportValue": {
+                    "Fn::Sub": "${BaseName}-bucket-name"
+                  }
+                },
+                "\" BASE_URL=\"",
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "https://",
+                      {
+                        "Fn::ImportValue": {
+                          "Fn::Sub": "${BaseName}-domain"
+                        }
+                      }
+                    ]
+                  ]
+                },
+                "\" DATABASE_URL=\"",
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "postgresql://$(echo $DATABASE_SECRET | jq -r '.username'):$(echo $DATABASE_SECRET | jq -r '.password')@",
+                      {
+                        "Fn::ImportValue": {
+                          "Fn::Sub": "${BaseName}-db-endpoint"
+                        }
+                      },
+                      ":",
+                      {
+                        "Fn::ImportValue": {
+                          "Fn::Sub": "${BaseName}-db-port"
+                        }
+                      },
+                      "/xrtour"
+                    ]
+                  ]
+                },
+                "\" MIXPANEL_TOKEN=\"",
+                {
+                  "Ref": "MixpanelToken"
+                },
+                "\" NODE_ENV=production SESSION_SECRET=\"",
+                {
+                  "Ref": "SessionSecret"
+                },
+                "\" SMTP_ENABLED=true SMTP_FROM_EMAIL_ADDRESS=\"",
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "no-reply@",
+                      {
+                        "Fn::ImportValue": {
+                          "Fn::Sub": "${BaseName}-domain"
+                        }
+                      }
+                    ]
+                  ]
+                },
+                "\" VITE_FEATURE_ASSET_TYPES=\"",
+                {
+                  "Ref": "FeatureAssetTypes"
+                },
+                "\" VITE_FEATURE_REGISTRATION=\"",
+                {
+                  "Ref": "FeatureRegistration"
+                },
+                "\" VITE_FEATURE_TRANSITIONS=\"",
+                {
+                  "Ref": "FeatureTransitions"
+                },
+                "\" VITE_GOOGLE_WEBFONTS_API_KEY=\"",
+                {
+                  "Ref": "GoogleWebfontsApiKey"
+                },
+                "\" VITE_MAPBOX_ACCESS_TOKEN=\"",
+                {
+                  "Ref": "MapboxAccessToken"
+                },
+                "\" VITE_SITE_TITLE=\"",
+                {
+                  "Ref": "SiteTitle"
+                },
+                "\"\ndokku git:from-image xrtour ",
+                {
+                  "Ref": "ImageUri"
+                },
+                "\ndokku run xrtour bash -c \"cd server; npx sequelize db:migrate\"\n",
+                "dokku domains:clear xrtour\n",
+                "dokku domains:add xrtour ",
+                {
+                  "Fn::ImportValue": {
+                    "Fn::Sub": "${BaseName}-domain"
+                  }
+                },
+                " *.",
+                {
+                  "Fn::ImportValue": {
+                    "Fn::Sub": "${BaseName}-domain"
+                  }
+                },
+                " *.staging.",
+                {
+                  "Fn::ImportValue": {
+                    "Fn::Sub": "${BaseName}-domain"
+                  }
+                },
+                "\n"
+              ]
+            ]
+          }
+        }
+      },
+      "Type": "AWS::EC2::Instance"
+    },
+    "InstanceRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Action": ["sts:AssumeRole"],
+              "Effect": "Allow",
+              "Principal": {
+                "Service": ["ec2.amazonaws.com"]
+              }
+            }
+          ]
+        },
+        "Policies": [
+          {
+            "PolicyName": {
+              "Fn::Sub": "${BaseName}-ec2-policy"
+            },
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": ["secretsmanager:GetSecretValue"],
+                  "Resource": [
+                    {
+                      "Fn::ImportValue": {
+                        "Fn::Sub": "${BaseName}-cdn-signing-private-key-arn"
+                      }
+                    },
+                    {
+                      "Fn::ImportValue": {
+                        "Fn::Sub": "${BaseName}-db-master-user-password-secret-arn"
+                      }
+                    }
+                  ]
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": ["ses:SendEmail", "ses:SendRawEmail"],
+                  "Resource": [
+                    {
+                      "Fn::ImportValue": {
+                        "Fn::Sub": "${BaseName}-ses-email-identity-arn"
+                      }
+                    }
+                  ]
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": ["s3:PutObject", "s3:GetObject", "s3:ListBucket", "s3:DeleteObject"],
+                  "Resource": [
+                    {
+                      "Fn::Join": [
+                        "",
+                        [
+                          "arn:aws:s3:::",
+                          {
+                            "Fn::ImportValue": {
+                              "Fn::Sub": "${BaseName}-bucket-name"
+                            }
+                          },
+                          "/*"
+                        ]
+                      ]
+                    },
+                    {
+                      "Fn::Join": [
+                        "",
+                        [
+                          "arn:aws:s3:::",
+                          {
+                            "Fn::ImportValue": {
+                              "Fn::Sub": "${BaseName}-bucket-name"
+                            }
+                          }
+                        ]
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "transcribe:GetTranscriptionJob",
+                    "transcribe:StartTranscriptionJob",
+                    "translate:ImportTerminology",
+                    "translate:TranslateText",
+                    "translate:TranslateDocument"
+                  ],
+                  "Resource": "*"
+                }
+              ]
+            }
+          }
+        ],
+        "RoleName": {
+          "Fn::Sub": "${BaseName}-ec2-iam-role"
+        }
+      }
+    },
+    "InstanceProfile": {
+      "Type": "AWS::IAM::InstanceProfile",
+      "Properties": {
+        "InstanceProfileName": {
+          "Fn::Sub": "${BaseName}-ec2-iam-instance-profile"
+        },
+        "Roles": [
+          {
+            "Ref": "InstanceRole"
+          }
+        ]
+      }
+    },
+    "InstanceSecurityGroup": {
+      "Properties": {
+        "GroupDescription": "Allow http/https/ssh traffic",
+        "GroupName": {
+          "Fn::Sub": "${BaseName}-ec2-sg"
+        },
+        "SecurityGroupIngress": [
+          {
+            "CidrIp": "0.0.0.0/0",
+            "FromPort": 80,
+            "IpProtocol": "tcp",
+            "ToPort": 80
+          },
+          {
+            "CidrIp": "0.0.0.0/0",
+            "FromPort": 443,
+            "IpProtocol": "tcp",
+            "ToPort": 443
+          },
+          {
+            "CidrIp": "0.0.0.0/0",
+            "FromPort": 22,
+            "IpProtocol": "tcp",
+            "ToPort": 22
+          }
+        ],
+        "VpcId": {
+          "Fn::ImportValue": {
+            "Fn::Sub": "${BaseName}-vpc-id"
+          }
+        }
+      },
+      "Type": "AWS::EC2::SecurityGroup"
+    },
+    "InstanceElasticIPAssociation": {
+      "Properties": {
+        "AllocationId": {
+          "Fn::ImportValue": {
+            "Fn::Sub": "${BaseName}-elastic-ip-0-allocation-id"
+          }
+        },
+        "InstanceId": {
+          "Ref": "Instance"
+        }
+      },
+      "Type": "AWS::EC2::EIPAssociation"
+    },
+    "DatabaseIngressFromInstance": {
+      "Properties": {
+        "SourceSecurityGroupId": {
+          "Fn::GetAtt": ["InstanceSecurityGroup", "GroupId"]
+        },
+        "IpProtocol": "tcp",
+        "FromPort": 5432,
+        "ToPort": 5432,
+        "GroupId": {
+          "Fn::ImportValue": {
+            "Fn::Sub": "${BaseName}-db-sg-id"
+          }
+        }
+      },
+      "Type": "AWS::EC2::SecurityGroupIngress"
+    },
+    "KeyPair": {
+      "Properties": {
+        "KeyName": {
+          "Fn::Sub": "${BaseName}-ec2-key-pair"
+        }
+      },
+      "Type": "AWS::EC2::KeyPair"
+    }
+  }
+}

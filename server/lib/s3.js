@@ -18,25 +18,28 @@ import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-let client;
 let signerClient;
-if (process.env.AWS_S3_ENDPOINT) {
-  const options = {
-    credentials: {
-      accessKeyId: process.env.AWS_S3_ACCESS_KEY_ID,
-      secretAccessKey: process.env.AWS_S3_SECRET_ACCESS_KEY,
-    },
-    endpoint: process.env.AWS_S3_ENDPOINT,
-    region: process.env.AWS_S3_REGION,
-    forcePathStyle: true,
+const config = {
+  forcePathStyle: true,
+};
+if (process.env.AWS_S3_ACCESS_KEY_ID && process.env.AWS_S3_SECRET_ACCESS_KEY) {
+  config.credentials = {
+    accessKeyId: process.env.AWS_S3_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_S3_SECRET_ACCESS_KEY,
   };
-  client = new S3Client(options);
-  if (process.env.AWS_S3_SIGNER_ENDPOINT) {
-    signerClient = new S3Client({
-      ...options,
-      endpoint: process.env.AWS_S3_SIGNER_ENDPOINT,
-    });
-  }
+}
+if (process.env.AWS_S3_ENDPOINT) {
+  config.endpoint = process.env.AWS_S3_ENDPOINT;
+}
+if (process.env.AWS_S3_REGION) {
+  config.region = process.env.AWS_S3_REGION;
+}
+const client = new S3Client(config);
+if (process.env.AWS_S3_SIGNER_ENDPOINT) {
+  signerClient = new S3Client({
+    ...config,
+    endpoint: process.env.AWS_S3_SIGNER_ENDPOINT,
+  });
 }
 
 function copyObject(CopySource, Key) {
