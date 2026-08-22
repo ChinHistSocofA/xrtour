@@ -26,7 +26,11 @@
       "Type": "Number"
     },
     "InstanceType": {
-      "AllowedValues": ["t4g.small", "t4g.medium", "t4g.large"],
+      "AllowedValues": [
+        "t4g.small",
+        "t4g.medium",
+        "t4g.large"
+      ],
       "Default": "t4g.medium",
       "Description": "The application server instance type",
       "Type": "String"
@@ -38,16 +42,23 @@
     "FeatureRegistration": {
       "Description": "A feature flag to enable/disable user registration",
       "Type": "String",
-      "AllowedValues": ["true", "false"]
+      "AllowedValues": [
+        "true",
+        "false"
+      ]
     },
     "FeatureTransitions": {
       "Description": "A feature flag to enable/disable transitions",
       "Type": "String",
-      "AllowedValues": ["true", "false"]
+      "AllowedValues": [
+        "true",
+        "false"
+      ]
     },
     "GoogleWebfontsApiKey": {
       "Description": "The Google Webfonts API key.",
-      "Type": "String"
+      "Type": "String",
+      "NoEcho": "true"
     },
     "LetsEncryptEmail": {
       "Description": "Email address to use with LetsEncrypt, to receive notifications of SSL cert renewals, etc",
@@ -55,15 +66,18 @@
     },
     "MapboxAccessToken": {
       "Description": "The access token for MapBox API",
-      "Type": "String"
+      "Type": "String",
+      "NoEcho": "true"
     },
     "MixpanelToken": {
       "Description": "The access token for Mixpanel analytics",
-      "Type": "String"
+      "Type": "String",
+      "NoEcho": "true"
     },
     "SessionSecret": {
       "Description": "A secret key for signing cookie sessions",
-      "Type": "String"
+      "Type": "String",
+      "NoEcho": "true"
     },
     "SiteTitle": {
       "Description": "The title of the site, used in emails and other notifications.",
@@ -151,18 +165,6 @@
                     "Fn::Sub": "${BaseName}-cdn-signing-private-key-arn"
                   }
                 },
-                "\"`\nAWS_SES_SECRET_ACCESS_KEY=`aws secretsmanager get-secret-value --query SecretString --output text --secret-id \"",
-                {
-                  "Fn::ImportValue": {
-                    "Fn::Sub": "${BaseName}-ses-user-secret-access-key-arn"
-                  }
-                },
-                "\"`\nAWS_S3_SECRET_ACCESS_KEY=`aws secretsmanager get-secret-value --query SecretString --output text --secret-id \"",
-                {
-                  "Fn::ImportValue": {
-                    "Fn::Sub": "${BaseName}-bucket-user-secret-access-key-arn"
-                  }
-                },
                 "\"`\nDATABASE_SECRET=`aws secretsmanager get-secret-value --query SecretString --output text --secret-id \"",
                 {
                   "Fn::ImportValue": {
@@ -182,27 +184,9 @@
                     "Fn::Sub": "${BaseName}-cdn-signing-keypair-id"
                   }
                 },
-                "\" AWS_CLOUDFRONT_PRIVATE_KEY=\"$AWS_CLOUDFRONT_PRIVATE_KEY\" AWS_SES_REGION=\"",
+                "\" AWS_CLOUDFRONT_PRIVATE_KEY=\"$AWS_CLOUDFRONT_PRIVATE_KEY\" AWS_REGION=\"",
                 {
                   "Ref": "AWS::Region"
-                },
-                "\" AWS_SES_ACCESS_KEY_ID=\"",
-                {
-                  "Fn::ImportValue": {
-                    "Fn::Sub": "${BaseName}-ses-user-access-key-id"
-                  }
-                },
-                "\" AWS_SES_SECRET_ACCESS_KEY=\"$AWS_SES_SECRET_ACCESS_KEY\" AWS_S3_ACCESS_KEY_ID=\"",
-                {
-                  "Fn::ImportValue": {
-                    "Fn::Sub": "${BaseName}-bucket-user-access-key-id"
-                  }
-                },
-                "\" AWS_S3_SECRET_ACCESS_KEY=\"$AWS_S3_SECRET_ACCESS_KEY\" AWS_S3_BUCKET=\"",
-                {
-                  "Fn::ImportValue": {
-                    "Fn::Sub": "${BaseName}-bucket"
-                  }
                 },
                 "\" AWS_S3_ENDPOINT=\"",
                 {
@@ -217,37 +201,13 @@
                     ]
                   ]
                 },
-                "\" AWS_S3_REGION=\"",
-                {
-                  "Ref": "AWS::Region"
-                },
-                "\" AWS_TRANSCRIBE_REGION=\"",
-                {
-                  "Ref": "AWS::Region"
-                },
-                "\" AWS_TRANSCRIBE_ACCESS_KEY_ID=\"",
-                {
-                  "Fn::ImportValue": {
-                    "Fn::Sub": "${BaseName}-bucket-user-access-key-id"
-                  }
-                },
-                "\" AWS_TRANSCRIBE_SECRET_ACCESS_KEY=\"$AWS_S3_SECRET_ACCESS_KEY\" AWS_TRANSCRIBE_BUCKET=\"",
+                "\" AWS_TRANSCRIBE_BUCKET=\"",
                 {
                   "Fn::ImportValue": {
                     "Fn::Sub": "${BaseName}-bucket"
                   }
                 },
-                "\" AWS_TRANSLATE_REGION=\"",
-                {
-                  "Ref": "AWS::Region"
-                },
-                "\" AWS_TRANSLATE_ACCESS_KEY_ID=\"",
-                {
-                  "Fn::ImportValue": {
-                    "Fn::Sub": "${BaseName}-bucket-user-access-key-id"
-                  }
-                },
-                "\" AWS_TRANSLATE_SECRET_ACCESS_KEY=\"$AWS_S3_SECRET_ACCESS_KEY\" BASE_URL=\"",
+                "\" BASE_URL=\"",
                 {
                   "Fn::Join": [
                     "",
@@ -367,10 +327,14 @@
           "Version": "2012-10-17",
           "Statement": [
             {
-              "Action": ["sts:AssumeRole"],
+              "Action": [
+                "sts:AssumeRole"
+              ],
               "Effect": "Allow",
               "Principal": {
-                "Service": ["ec2.amazonaws.com"]
+                "Service": [
+                  "ec2.amazonaws.com"
+                ]
               }
             }
           ]
@@ -378,20 +342,17 @@
         "Policies": [
           {
             "PolicyName": {
-              "Fn::Sub": "${BaseName}-ec2-secrets-policy"
+              "Fn::Sub": "${BaseName}-ec2-policy"
             },
             "PolicyDocument": {
               "Version": "2012-10-17",
               "Statement": [
                 {
-                  "Action": ["secretsmanager:GetSecretValue"],
                   "Effect": "Allow",
+                  "Action": [
+                    "secretsmanager:GetSecretValue"
+                  ],
                   "Resource": [
-                    {
-                      "Fn::ImportValue": {
-                        "Fn::Sub": "${BaseName}-bucket-user-secret-access-key-arn"
-                      }
-                    },
                     {
                       "Fn::ImportValue": {
                         "Fn::Sub": "${BaseName}-cdn-signing-private-key-arn"
@@ -401,13 +362,71 @@
                       "Fn::ImportValue": {
                         "Fn::Sub": "${BaseName}-db-master-user-password-secret-arn"
                       }
-                    },
+                    }
+                  ]
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "ses:SendEmail",
+                    "ses:SendRawEmail"
+                  ],
+                  "Resource": [
                     {
                       "Fn::ImportValue": {
-                        "Fn::Sub": "${BaseName}-ses-user-secret-access-key-arn"
+                        "Fn::Sub": "${BaseName}-ses-email-identity-arn"
                       }
                     }
                   ]
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "s3:PutObject",
+                    "s3:GetObject",
+                    "s3:ListBucket",
+                    "s3:DeleteObject"
+                  ],
+                  "Resource": [
+                    {
+                      "Fn::Join": [
+                        "",
+                        [
+                          "arn:aws:s3:::",
+                          {
+                            "Fn::ImportValue": {
+                              "Fn::Sub": "${BaseName}-bucket-name"
+                            }
+                          },
+                          "/*"
+                        ]
+                      ]
+                    },
+                    {
+                      "Fn::Join": [
+                        "",
+                        [
+                          "arn:aws:s3:::",
+                          {
+                            "Fn::ImportValue": {
+                              "Fn::Sub": "${BaseName}-bucket-name"
+                            }
+                          }
+                        ]
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "transcribe:GetTranscriptionJob",
+                    "transcribe:StartTranscriptionJob",
+                    "translate:ImportTerminology",
+                    "translate:TranslateText",
+                    "translate:TranslateDocument"
+                  ],
+                  "Resource": "*"
                 }
               ]
             }
@@ -481,7 +500,10 @@
     "DatabaseIngressFromInstance": {
       "Properties": {
         "SourceSecurityGroupId": {
-          "Fn::GetAtt": ["InstanceSecurityGroup", "GroupId"]
+          "Fn::GetAtt": [
+            "InstanceSecurityGroup",
+            "GroupId"
+          ]
         },
         "IpProtocol": "tcp",
         "FromPort": 5432,

@@ -9,28 +9,6 @@
     }
   },
   "Outputs": {
-    "SESUserAccessKeyId": {
-      "Description": "Access Key ID for the user",
-      "Value": {
-        "Ref": "SESUserAccessKey"
-      },
-      "Export": {
-        "Name": {
-          "Fn::Sub": "${BaseName}-ses-user-access-key-id"
-        }
-      }
-    },
-    "SESUserSecretAccessKeyARN": {
-      "Description": "ARN for the Secrets Manager secret containing the Secret Access Key for the user",
-      "Value": {
-        "Ref": "SESUserSecretAccessKey"
-      },
-      "Export": {
-        "Name": {
-          "Fn::Sub": "${BaseName}-ses-user-secret-access-key-arn"
-        }
-      }
-    },
     "DkimDNSTokenName1": {
       "Description": "DNS token name for DKIM 1",
       "Value": {
@@ -96,6 +74,17 @@
           "Fn::Sub": "${BaseName}-dkim-dns-token-value-3"
         }
       }
+    },
+    "SESEmailIdentityARN": {
+      "Description": "ARN for the email identity",
+      "Value": {
+        "Fn::Sub": "arn:aws:ses:${AWS::Region}:${AWS::AccountId}:identity/${SESEmailIdentity}"
+      },
+      "Export": {
+        "Name": {
+          "Fn::Sub": "${BaseName}-ses-email-identity-arn"
+        }
+      }
     }
   },
   "Resources": {
@@ -122,51 +111,6 @@
               ]
             ]
           }
-        }
-      }
-    },
-    "SESUser": {
-      "Type": "AWS::IAM::User",
-      "Properties": {
-        "Policies": [
-          {
-            "PolicyName": {
-              "Fn::Sub": "${BaseName}-ses-policy"
-            },
-            "PolicyDocument": {
-              "Version": "2012-10-17",
-              "Statement": [
-                {
-                  "Effect": "Allow",
-                  "Action": "ses:SendRawEmail",
-                  "Resource": "*"
-                }
-              ]
-            }
-          }
-        ],
-        "UserName": {
-          "Fn::Sub": "${BaseName}-ses-user"
-        }
-      }
-    },
-    "SESUserAccessKey": {
-      "Type": "AWS::IAM::AccessKey",
-      "Properties": {
-        "Status": "Active",
-        "UserName": {
-          "Ref": "SESUser"
-        }
-      }
-    },
-    "SESUserSecretAccessKey": {
-      "Type": "AWS::SecretsManager::Secret",
-      "Properties": {
-        "Name": {
-          "Fn::Sub": "/iam/user/${BaseName}-ses-user/secret-access-key"
-        },
-        "SecretString": {
-          "Fn::GetAtt": ["SESUserAccessKey", "SecretAccessKey"]
         }
       }
     }
