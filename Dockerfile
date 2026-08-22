@@ -47,5 +47,4 @@ RUN npm install && \
     npm run build -w viewer
 
 # Set up default command to run Node on port 3000
-EXPOSE 3000
 CMD ["./node_modules/.bin/pm2-runtime", "./server/bin/www"]
