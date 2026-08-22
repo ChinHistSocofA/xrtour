@@ -1,5 +1,5 @@
-import crypto from 'crypto';
 import Email from 'email-templates';
+import nodemailer from 'nodemailer';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -7,41 +7,22 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 let transport;
 
-if (process.env.SMTP_ENABLED === 'true') {
-  if (process.env.MAILGUN_SMTP_SERVER) {
-    process.env.SMTP_HOST = process.env.MAILGUN_SMTP_SERVER;
-    process.env.SMTP_PORT = process.env.MAILGUN_SMTP_PORT;
-    process.env.SMTP_USERNAME = process.env.MAILGUN_SMTP_LOGIN;
-    process.env.SMTP_PASSWORD = process.env.MAILGUN_SMTP_PASSWORD;
-  } else if (process.env.AWS_SES_REGION) {
-    process.env.SMTP_HOST = `email-smtp.${process.env.AWS_SES_REGION}.amazonaws.com`;
-    process.env.SMTP_PORT = 587;
-    process.env.SMTP_USERNAME = process.env.AWS_SES_ACCESS_KEY_ID;
-    // convert secret access key to SMTP password
-    // based on pseudocode at: https://docs.aws.amazon.com/ses/latest/dg/smtp-credentials.html#smtp-credentials-convert
-    const date = '11111111';
-    const service = 'ses';
-    const terminal = 'aws4_request';
-    const message = 'SendRawEmail';
-    const version = 4;
-    let signature;
-    signature = crypto.createHmac('sha256', `AWS4${process.env.AWS_SES_SECRET_ACCESS_KEY}`, { encoding: 'utf8' }).update(date).digest();
-    signature = crypto.createHmac('sha256', signature).update(process.env.AWS_SES_REGION).digest();
-    signature = crypto.createHmac('sha256', signature).update(service).digest();
-    signature = crypto.createHmac('sha256', signature).update(terminal).digest();
-    signature = crypto.createHmac('sha256', signature).update(message).digest();
-    signature = Buffer.concat([new Uint8Array([version]), signature]);
-    process.env.SMTP_PASSWORD = signature.toString('base64');
-  }
+if (process.env.EMAIL_TRANSPORT === 'smtp') {
   transport = {
-    host: process.env.SMTP_HOST,
-    port: process.env.SMTP_PORT,
-    secure: process.env.SMTP_PORT === 465,
+    host: process.env.EMAIL_SMTP_HOST,
+    port: process.env.EMAIL_SMTP_PORT,
+    secure: process.env.EMAIL_SMTP_PORT === 465,
     auth: {
-      user: process.env.SMTP_USERNAME,
-      pass: process.env.SMTP_PASSWORD,
+      user: process.env.EMAIL_SMTP_USERNAME,
+      pass: process.env.EMAIL_SMTP_PASSWORD,
     },
   };
+} else if (process.env.EMAIL_TRANSPORT === 'ses') {
+  const { SESv2Client, SendEmailCommand } = await import('@aws-sdk/client-sesv2');
+  const sesClient = new SESv2Client();
+  transport = nodemailer.createTransport({
+    SES: { sesClient, SendEmailCommand },
+  });
 } else {
   transport = {
     jsonTransport: true,
@@ -55,7 +36,7 @@ if (process.env.NODE_ENV === 'test') {
 
 const email = new Email({
   message: {
-    from: `${process.env.VITE_SITE_TITLE} <${process.env.SMTP_FROM_EMAIL_ADDRESS}>`,
+    from: `${process.env.VITE_SITE_TITLE} <${process.env.EMAIL_FROM_ADDRESS}>`,
   },
   send: true,
   transport,

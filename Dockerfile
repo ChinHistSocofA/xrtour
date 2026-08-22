@@ -20,17 +20,8 @@ RUN wget -q https://www.postgresql.org/media/keys/ACCC4CF8.asc -O - | apt-key ad
     apt-get install -y docker-ce-cli docker-buildx-plugin jq less postgresql-client-14 zip && \
     apt-get clean && \
     curl https://dl.min.io/client/mc/release/linux-$TARGETARCH/mc --create-dirs -o ~/minio-binaries/mc && \
-    chmod +x ~/minio-binaries/mc
-
-RUN if [ "$TARGETARCH" = "amd64" ]; then \
-        curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"; \
-    elif [ "$TARGETARCH" = "arm64" ]; then \
-        curl "https://awscli.amazonaws.com/awscli-exe-linux-aarch64.zip" -o "awscliv2.zip"; \
-    fi && \
-    unzip awscliv2.zip && \
-    ./aws/install && \
-    rm awscliv2.zip && \
-    rm -Rf aws
+    chmod +x ~/minio-binaries/mc && \
+    curl -fsSL https://awscli.amazonaws.com/v2/install.sh | bash -s -- --system
 
 # Create a directory for the server app to run from
 RUN mkdir -p $APP_HOME
@@ -47,5 +38,4 @@ RUN npm install && \
     npm run build -w viewer
 
 # Set up default command to run Node on port 3000
-EXPOSE 3000
 CMD ["./node_modules/.bin/pm2-runtime", "./server/bin/www"]

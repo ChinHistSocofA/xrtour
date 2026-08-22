@@ -4,7 +4,7 @@ services:
     environment:
       - POSTGRES_HOST_AUTH_METHOD=trust
   mailcatcher:
-    image: dockage/mailcatcher:0.8.2
+    image: dockage/mailcatcher:0.9.0
     ports:
       - 1080:1080
       - 1025:1025
@@ -33,10 +33,10 @@ services:
       - /opt/node/app/viewer/node_modules
       - /opt/node/app/node_modules
     environment:
-      - SMTP_HOST=mailcatcher
-      - SMTP_PORT=1025
-      - SMTP_USERNAME=none
-      - SMTP_PASSWORD=none
+      - EMAIL_SMTP_HOST=mailcatcher
+      - EMAIL_SMTP_PORT=1025
+      - EMAIL_SMTP_USERNAME=none
+      - EMAIL_SMTP_PASSWORD=none
       - PORT=3000
       - DATABASE_URL=postgres://postgres@db/app
       - AWS_S3_ACCESS_KEY_ID=minioadmin
