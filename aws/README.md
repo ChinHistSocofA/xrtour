@@ -26,7 +26,7 @@
    a. DOMAIN: the domain name you've registered, i.e. `xrtour.org` or `xrtour.mynonprofit.org`
 
    b. IMAGE_URI: the name of the server image, i.e. `chinhistsocofa/xrtour:1.0.59`  
-      See latest versions at: https://hub.docker.com/repository/docker/chinhistsocofa/xrtour/general
+    See latest versions at: https://hub.docker.com/repository/docker/chinhistsocofa/xrtour/general
 
    c. LETSENCRYPT_EMAIL: the email address to use when requesting free SSL certificates from Let's Encrypt. Should be the email address of an administrator.
 
@@ -36,12 +36,12 @@
 
    f. VITE_FEATURE_ASSET_TYPES: a list of the asset types allowed to be used in creating tours. It should be a comma separated list with NO spaces from the following options:
 
-      - 3D_MODEL: glb 3D models
-      - AR_LINK: links to externally hosted AR experiences
-      - AUDIO: audio files
-      - IMAGE: images
-      - IMAGE_OVERLAY: images that can be overlayed over a live camera (with optional fallback image)
-      - IMAGE_SPHERE: 360 degree panoramic images
+   - 3D_MODEL: glb 3D models
+   - AR_LINK: links to externally hosted AR experiences
+   - AUDIO: audio files
+   - IMAGE: images
+   - IMAGE_OVERLAY: images that can be overlayed over a live camera (with optional fallback image)
+   - IMAGE_SPHERE: 360 degree panoramic images
 
    g. VITE_FEATURE_REGISTRATION: set to `true` to allow users to register accounts for the application. If `false`, only invited users can create accounts.
 
@@ -51,7 +51,7 @@
 
    j. VITE_MAPBOX_ACCESS_TOKEN: the access token for Mapbox. See https://www.mapbox.com/help/how-mapbox-access-tokens-work/
 
-   k. VITE_SITE_TITLE: the name of the site. 
+   k. VITE_SITE_TITLE: the name of the site.
 
 3. After logging in to your AWS account in the AWS CLI (i.e. `aws login`), run the `./basic.sh` script and follow the prompts, entering your deployment name and environment. Follow the instructions to add DNS records to your domain as prompted.
 
@@ -65,7 +65,7 @@
    dokku letsencrypt:set xrtour dns-provider cloudflare
    dokku letsencrypt:set xrtour dns-provider-CF_DNS_API_TOKEN <your-cf-dns-api-token>
    ```
-  
+
    Then, enable SSL:
 
    ```
@@ -79,4 +79,3 @@
    cd server
    bin/create-admin Firstname Lastname email@address.com password
    ```
-   
